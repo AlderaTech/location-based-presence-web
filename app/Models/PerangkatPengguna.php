@@ -13,7 +13,7 @@ class PerangkatPengguna extends Model
     protected $table = 'perangkat_pengguna';
 
     protected $fillable = [
-        'pengguna_id',
+        'id_pengguna',
         'id_perangkat',
         'nama_perangkat',
         'platform',
@@ -33,6 +33,6 @@ class PerangkatPengguna extends Model
 
     public function pengguna(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 }

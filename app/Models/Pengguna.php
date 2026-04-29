@@ -51,17 +51,17 @@ class Pengguna extends Authenticatable
 
     public function guru(): HasOne
     {
-        return $this->hasOne(Guru::class, 'pengguna_id');
+        return $this->hasOne(Guru::class, 'id_pengguna');
     }
 
     public function perangkat(): HasMany
     {
-        return $this->hasMany(PerangkatPengguna::class, 'pengguna_id');
+        return $this->hasMany(PerangkatPengguna::class, 'id_pengguna');
     }
 
     public function tokenApi(): HasMany
     {
-        return $this->hasMany(TokenApi::class, 'pengguna_id');
+        return $this->hasMany(TokenApi::class, 'id_pengguna');
     }
 
     public function adalahAdmin(): bool

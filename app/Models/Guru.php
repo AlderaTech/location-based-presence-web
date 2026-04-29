@@ -14,8 +14,8 @@ class Guru extends Model
     protected $table = 'guru';
 
     protected $fillable = [
-        'pengguna_id',
-        'jadwal_kerja_bawaan_id',
+        'id_pengguna',
+        'id_jadwal_kerja_bawaan',
         'nip',
         'mata_pelajaran',
         'jabatan',
@@ -35,21 +35,21 @@ class Guru extends Model
 
     public function pengguna(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
     public function jadwalKerjaBawaan(): BelongsTo
     {
-        return $this->belongsTo(JadwalKerja::class, 'jadwal_kerja_bawaan_id');
+        return $this->belongsTo(JadwalKerja::class, 'id_jadwal_kerja_bawaan');
     }
 
     public function presensi(): HasMany
     {
-        return $this->hasMany(Presensi::class, 'guru_id');
+        return $this->hasMany(Presensi::class, 'id_guru');
     }
 
     public function pengajuanIzin(): HasMany
     {
-        return $this->hasMany(PengajuanIzin::class, 'guru_id');
+        return $this->hasMany(PengajuanIzin::class, 'id_guru');
     }
 }

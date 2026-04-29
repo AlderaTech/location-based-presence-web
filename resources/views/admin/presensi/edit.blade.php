@@ -11,7 +11,7 @@
     @endphp
 
     <h1 class="mb-5 text-2xl font-semibold">Koreksi Presensi</h1>
-    <form method="post" action="{{ route('admin.presensi.update', $presensi) }}" class="grid gap-4 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-2">
+    <form method="post" action="{{ route('admin.presensi.update', $presensi) }}" class="grid gap-4 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-2" data-confirm data-confirm-title="Simpan koreksi presensi?" data-confirm-text="Perubahan akan tercatat pada log audit presensi." data-confirm-button="Simpan Koreksi" data-confirm-variant="warning">
         @csrf @method('put')
         <div class="text-sm"><span class="text-slate-500">Guru</span><div class="font-medium">{{ $presensi->pengguna?->nama }}</div></div>
         <div class="text-sm"><span class="text-slate-500">Tanggal</span><div class="font-medium">{{ $presensi->tanggal_presensi?->format('Y-m-d') }}</div></div>

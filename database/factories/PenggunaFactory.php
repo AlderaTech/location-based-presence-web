@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
  */
 class PenggunaFactory extends Factory
 {
+    private const KATA_SANDI_DEFAULT = 'password';
+
     protected $model = Pengguna::class;
 
     protected static ?string $kataSandi;
@@ -24,7 +26,7 @@ class PenggunaFactory extends Factory
             'email_terverifikasi_pada' => now(),
             'peran' => 'guru',
             'status' => 'aktif',
-            'kata_sandi' => static::$kataSandi ??= Hash::make('password'),
+            'kata_sandi' => static::$kataSandi ??= Hash::make(self::KATA_SANDI_DEFAULT),
             'token_ingat' => Str::random(10),
         ];
     }

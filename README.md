@@ -1,3 +1,39 @@
+# Presensi Web
+
+Backend API dan dashboard admin Presensi Guru berbasis Laravel.
+
+## CI/CD
+
+Workflow berada di `.github/workflows/web.yml`.
+
+- Pull request: menjalankan test Laravel dan build asset frontend.
+- Push ke `main` atau `master`: menjalankan test, build Docker image, lalu push image ke GHCR.
+- Push tag `web-v*` atau `v*`: menjalankan test, build Docker image, lalu push image tag release ke GHCR.
+- Manual workflow dispatch: bisa dipakai untuk publish ulang image dari branch yang dipilih.
+
+Image GHCR dipublish ke:
+
+```text
+ghcr.io/<owner>/<repo>
+```
+
+Tag yang dibuat:
+
+- `latest` untuk default branch.
+- Nama branch, misalnya `main`.
+- Nama tag Git, misalnya `web-v1.0.0`.
+- `sha-<commit>` untuk jejak build.
+
+Contoh pull image:
+
+```bash
+docker pull ghcr.io/<owner>/<repo>:latest
+```
+
+Jika tab Packages masih kosong setelah workflow sukses, pastikan repository sudah berada di root repo GitHub yang benar dan workflow memiliki permission `packages: write`.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

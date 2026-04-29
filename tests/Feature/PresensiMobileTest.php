@@ -30,7 +30,7 @@ class PresensiMobileTest extends TestCase
             ->assertJsonStructure(['token', 'tipe_token', 'pengguna' => ['guru']]);
 
         $this->assertDatabaseHas('perangkat_pengguna', [
-            'pengguna_id' => $guru->pengguna_id,
+            'id_pengguna' => $guru->id_pengguna,
             'id_perangkat' => 'perangkat-1',
             'aktif' => true,
         ]);
@@ -72,7 +72,7 @@ class PresensiMobileTest extends TestCase
             ->assertJsonPath('presensi.tanggal', today()->toDateString());
 
         $this->assertTrue(Presensi::query()
-            ->where('guru_id', $guru->id)
+            ->where('id_guru', $guru->id)
             ->whereDate('tanggal_presensi', today())
             ->exists());
     }
@@ -93,9 +93,9 @@ class PresensiMobileTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors('lokasi_palsu');
 
-        $this->assertDatabaseMissing('presensi', ['guru_id' => $guru->id]);
+        $this->assertDatabaseMissing('presensi', ['id_guru' => $guru->id]);
         $this->assertDatabaseHas('log_audit_presensi', [
-            'pengguna_id' => $guru->pengguna_id,
+            'id_pengguna' => $guru->id_pengguna,
             'aksi' => 'lokasi_palsu_diblokir',
         ]);
     }
@@ -127,8 +127,8 @@ class PresensiMobileTest extends TestCase
         ]);
 
         return Guru::create([
-            'pengguna_id' => $pengguna->id,
-            'jadwal_kerja_bawaan_id' => $jadwal->id,
+            'id_pengguna' => $pengguna->id,
+            'id_jadwal_kerja_bawaan' => $jadwal->id,
             'nip' => 'T-001',
             'mata_pelajaran' => 'Matematika',
             'aktif' => true,

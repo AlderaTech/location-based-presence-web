@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */
@@ -15,5 +17,12 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertRedirect('/admin');
+    }
+
+    public function test_admin_dashboard_mengarahkan_guest_ke_halaman_masuk(): void
+    {
+        $response = $this->get('/admin');
+
+        $response->assertRedirect(route('admin.masuk'));
     }
 }

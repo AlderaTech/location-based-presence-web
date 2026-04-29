@@ -13,7 +13,7 @@ class TokenApi extends Model
     protected $table = 'token_api';
 
     protected $fillable = [
-        'pengguna_id',
+        'id_pengguna',
         'nama',
         'hash_token',
         'id_perangkat',
@@ -31,6 +31,6 @@ class TokenApi extends Model
 
     public function pengguna(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 }

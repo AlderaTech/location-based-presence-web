@@ -13,10 +13,10 @@ class Presensi extends Model
     protected $table = 'presensi';
 
     protected $fillable = [
-        'pengguna_id',
-        'guru_id',
-        'lokasi_sekolah_id',
-        'jadwal_kerja_id',
+        'id_pengguna',
+        'id_guru',
+        'id_lokasi_sekolah',
+        'id_jadwal_kerja',
         'tanggal_presensi',
         'jam_masuk_pada',
         'jam_pulang_pada',
@@ -32,7 +32,7 @@ class Presensi extends Model
         'terdeteksi_lokasi_palsu',
         'id_perangkat',
         'catatan',
-        'dikoreksi_oleh',
+        'id_pengoreksi',
         'alasan_koreksi',
     ];
 
@@ -48,21 +48,21 @@ class Presensi extends Model
 
     public function pengguna(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
     public function guru(): BelongsTo
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsTo(Guru::class, 'id_guru');
     }
 
     public function lokasiSekolah(): BelongsTo
     {
-        return $this->belongsTo(LokasiSekolah::class, 'lokasi_sekolah_id');
+        return $this->belongsTo(LokasiSekolah::class, 'id_lokasi_sekolah');
     }
 
     public function jadwalKerja(): BelongsTo
     {
-        return $this->belongsTo(JadwalKerja::class, 'jadwal_kerja_id');
+        return $this->belongsTo(JadwalKerja::class, 'id_jadwal_kerja');
     }
 }

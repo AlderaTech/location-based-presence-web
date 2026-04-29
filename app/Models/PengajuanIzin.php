@@ -14,14 +14,14 @@ class PengajuanIzin extends Model
     protected $table = 'pengajuan_izin';
 
     protected $fillable = [
-        'pengguna_id',
-        'guru_id',
+        'id_pengguna',
+        'id_guru',
         'jenis',
         'tanggal_mulai',
         'tanggal_selesai',
         'alasan',
         'status',
-        'ditinjau_oleh',
+        'id_peninjau',
         'ditinjau_pada',
         'alasan_penolakan',
     ];
@@ -37,21 +37,21 @@ class PengajuanIzin extends Model
 
     public function pengguna(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'pengguna_id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
     public function guru(): BelongsTo
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsTo(Guru::class, 'id_guru');
     }
 
     public function peninjau(): BelongsTo
     {
-        return $this->belongsTo(Pengguna::class, 'ditinjau_oleh');
+        return $this->belongsTo(Pengguna::class, 'id_peninjau');
     }
 
     public function dokumen(): HasMany
     {
-        return $this->hasMany(DokumenIzin::class, 'pengajuan_izin_id');
+        return $this->hasMany(DokumenIzin::class, 'id_pengajuan_izin');
     }
 }

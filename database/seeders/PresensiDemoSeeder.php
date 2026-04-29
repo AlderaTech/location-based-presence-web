@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PresensiDemoSeeder extends Seeder
 {
+    private const KATA_SANDI_DEMO = 'password';
     private const LATITUDE_SEKOLAH = -6.2000000;
     private const LONGITUDE_SEKOLAH = 106.8166660;
 
@@ -148,9 +149,9 @@ class PresensiDemoSeeder extends Seeder
             );
 
             $guru[] = Guru::query()->updateOrCreate(
-                ['pengguna_id' => $pengguna->id],
+                ['id_pengguna' => $pengguna->id],
                 [
-                    'jadwal_kerja_bawaan_id' => $jadwalKerja[$kodeJadwal]->id,
+                    'id_jadwal_kerja_bawaan' => $jadwalKerja[$kodeJadwal]->id,
                     'nip' => $nomor,
                     'mata_pelajaran' => $mataPelajaran,
                     'jabatan' => $jabatan,
@@ -249,7 +250,7 @@ class PresensiDemoSeeder extends Seeder
                     ->addMinutes(($index % 4) * 5);
 
                 $presensi = $this->presensi($guruItem, $lokasi, $hari, [
-                    'jadwal_kerja_id' => $jadwal->id,
+                    'id_jadwal_kerja' => $jadwal->id,
                     'jam_masuk_pada' => $jamMasuk,
                     'jam_pulang_pada' => $jamPulang,
                     'latitude_masuk' => self::LATITUDE_SEKOLAH + (($index + 1) * 0.0000100),
@@ -279,12 +280,12 @@ class PresensiDemoSeeder extends Seeder
         if ($guruManual) {
             $tanggalManual = CarbonImmutable::now()->subDays(2);
             $presensiManual = $this->presensi($guruManual, $lokasi, $tanggalManual, [
-                'jadwal_kerja_id' => $guruManual->jadwal_kerja_bawaan_id,
+                'id_jadwal_kerja' => $guruManual->id_jadwal_kerja_bawaan,
                 'status' => 'hadir',
                 'jam_masuk_pada' => $tanggalManual->setTime(7, 3),
                 'jam_pulang_pada' => $tanggalManual->setTime(15, 8),
                 'catatan' => 'Koreksi demo karena aplikasi guru sempat tidak bisa membuka GPS.',
-                'dikoreksi_oleh' => $admin->id,
+                'id_pengoreksi' => $admin->id,
                 'alasan_koreksi' => 'Simulasi koreksi manual oleh admin.',
             ]);
 
@@ -361,21 +362,21 @@ class PresensiDemoSeeder extends Seeder
             }
 
             $pengajuan = PengajuanIzin::query()
-                ->where('guru_id', $guruItem->id)
+                ->where('id_guru', $guruItem->id)
                 ->where('jenis', $item['jenis'])
                 ->whereDate('tanggal_mulai', $item['tanggal_mulai']->toDateString())
                 ->first() ?: new PengajuanIzin([
-                    'guru_id' => $guruItem->id,
+                    'id_guru' => $guruItem->id,
                     'jenis' => $item['jenis'],
                     'tanggal_mulai' => $item['tanggal_mulai']->toDateString(),
                 ]);
 
             $pengajuan->fill([
-                'pengguna_id' => $guruItem->pengguna_id,
+                'id_pengguna' => $guruItem->id_pengguna,
                 'tanggal_selesai' => $item['tanggal_selesai']->toDateString(),
                 'alasan' => $item['alasan'],
                 'status' => $item['status'],
-                'ditinjau_oleh' => $item['status'] === 'menunggu' ? null : $peninjau->id,
+                'id_peninjau' => $item['status'] === 'menunggu' ? null : $peninjau->id,
                 'ditinjau_pada' => $item['status'] === 'menunggu' ? null : now()->subDays(2),
                 'alasan_penolakan' => $item['alasan_penolakan'] ?? null,
             ])->save();
@@ -391,15 +392,15 @@ class PresensiDemoSeeder extends Seeder
                     }
 
                     $presensi = $this->presensi($guruItem, null, CarbonImmutable::parse($tanggal), [
-                        'jadwal_kerja_id' => $guruItem->jadwal_kerja_bawaan_id,
+                        'id_jadwal_kerja' => $guruItem->id_jadwal_kerja_bawaan,
                         'status' => $item['jenis'],
                         'catatan' => $item['alasan'],
-                        'dikoreksi_oleh' => $peninjau->id,
+                        'id_pengoreksi' => $peninjau->id,
                         'alasan_koreksi' => 'Persetujuan pengajuan demo #'.$pengajuan->id,
                     ]);
 
                     $this->audit($presensi, $guruItem->pengguna, $peninjau, 'seed_pengajuan_disetujui', [
-                        'pengajuan_izin_id' => $pengajuan->id,
+                        'id_pengajuan_izin' => $pengajuan->id,
                         'jenis' => $item['jenis'],
                     ]);
                 }
@@ -418,7 +419,7 @@ class PresensiDemoSeeder extends Seeder
         }
 
         LogAuditPresensi::query()->create([
-            'pengguna_id' => $guruItem->pengguna_id,
+            'id_pengguna' => $guruItem->id_pengguna,
             'aksi' => 'seed_lokasi_palsu_diblokir',
             'payload' => [
                 'id_perangkat' => 'demo-device-'.$guruItem->nip,
@@ -443,7 +444,7 @@ class PresensiDemoSeeder extends Seeder
             ['email' => $email],
             [
                 'nama' => $nama,
-                'kata_sandi' => Hash::make('password'),
+                'kata_sandi' => Hash::make(self::KATA_SANDI_DEMO),
                 'peran' => $peran,
                 'nomor_pegawai' => $nomorPegawai,
                 'telepon' => $telepon,
@@ -459,17 +460,17 @@ class PresensiDemoSeeder extends Seeder
         array $atribut,
     ): Presensi {
         $presensi = Presensi::query()
-            ->where('guru_id', $guru->id)
+            ->where('id_guru', $guru->id)
             ->whereDate('tanggal_presensi', $tanggal->toDateString())
             ->first() ?: new Presensi([
-                'guru_id' => $guru->id,
+                'id_guru' => $guru->id,
                 'tanggal_presensi' => $tanggal->toDateString(),
             ]);
 
         $presensi->fill(array_merge([
-            'pengguna_id' => $guru->pengguna_id,
-            'lokasi_sekolah_id' => $lokasi?->id,
-            'jadwal_kerja_id' => $guru->jadwal_kerja_bawaan_id,
+            'id_pengguna' => $guru->id_pengguna,
+            'id_lokasi_sekolah' => $lokasi?->id,
+            'id_jadwal_kerja' => $guru->id_jadwal_kerja_bawaan,
             'jam_masuk_pada' => null,
             'jam_pulang_pada' => null,
             'latitude_masuk' => null,
@@ -484,7 +485,7 @@ class PresensiDemoSeeder extends Seeder
             'terdeteksi_lokasi_palsu' => false,
             'id_perangkat' => null,
             'catatan' => null,
-            'dikoreksi_oleh' => null,
+            'id_pengoreksi' => null,
             'alasan_koreksi' => null,
         ], $atribut));
 
@@ -496,9 +497,9 @@ class PresensiDemoSeeder extends Seeder
     private function audit(Presensi $presensi, Pengguna $pengguna, ?Pengguna $aktor, string $aksi, array $payload): void
     {
         LogAuditPresensi::query()->create([
-            'presensi_id' => $presensi->id,
-            'pengguna_id' => $pengguna->id,
-            'aktor_id' => $aktor?->id,
+            'id_presensi' => $presensi->id,
+            'id_pengguna' => $pengguna->id,
+            'id_aktor' => $aktor?->id,
             'aksi' => $aksi,
             'payload' => $payload,
             'dibuat_pada' => now(),

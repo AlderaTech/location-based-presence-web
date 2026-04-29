@@ -1,6 +1,22 @@
-FROM composer:2 AS vendor
+FROM composer:2 AS composer
+
+FROM php:8.4-cli-alpine AS vendor
 
 WORKDIR /app
+
+RUN apk add --no-cache \
+    icu-dev \
+    libzip-dev \
+    oniguruma-dev \
+    && docker-php-ext-install \
+    bcmath \
+    intl \
+    mbstring \
+    pcntl \
+    pdo_mysql \
+    zip
+
+COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
 RUN composer install \
@@ -25,7 +41,7 @@ COPY public ./public
 COPY vite.config.js ./
 RUN npm run build
 
-FROM php:8.3-fpm-alpine AS runtime
+FROM php:8.4-fpm-alpine AS runtime
 
 WORKDIR /var/www/html
 

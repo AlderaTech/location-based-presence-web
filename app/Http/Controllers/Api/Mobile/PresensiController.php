@@ -16,7 +16,7 @@ class PresensiController extends Controller
     {
         $presensi = Presensi::query()
             ->with(['lokasiSekolah', 'jadwalKerja'])
-            ->where('guru_id', $request->user()->guru?->id)
+            ->where('id_guru', $request->user()->guru?->id)
             ->whereDate('tanggal_presensi', today())
             ->first();
 
@@ -51,7 +51,7 @@ class PresensiController extends Controller
         $guruId = $request->user()->guru?->id;
         $items = Presensi::query()
             ->with(['lokasiSekolah', 'jadwalKerja'])
-            ->where('guru_id', $guruId)
+            ->where('id_guru', $guruId)
             ->whereBetween('tanggal_presensi', [$bulan.'-01', Carbon::parse($bulan.'-01')->endOfMonth()->toDateString()])
             ->orderByDesc('tanggal_presensi')
             ->get()

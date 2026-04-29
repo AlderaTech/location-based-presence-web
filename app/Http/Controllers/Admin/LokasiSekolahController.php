@@ -4,16 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LokasiSekolah;
+use App\Support\SortirAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class LokasiSekolahController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = LokasiSekolah::query()
+            ->when($request->query('q'), fn ($query, string $q) => $query->where('nama', 'like', '%'.$q.'%'))
+            ->when($request->has('aktif') && $request->query('aktif') !== '', fn ($query) => $query->where('aktif', $request->boolean('aktif')))
+            ->when($request->query('radius_min'), fn ($query, $radius) => $query->where('radius_meter', '>=', $radius))
+            ->when($request->query('radius_max'), fn ($query, $radius) => $query->where('radius_meter', '<=', $radius));
+
+        SortirAdmin::terapkan($query, $request, [
+            'nama' => 'lokasi_sekolah.nama',
+            'radius' => 'lokasi_sekolah.radius_meter',
+            'status' => 'lokasi_sekolah.aktif',
+            'dibuat_pada' => 'lokasi_sekolah.dibuat_pada',
+        ], 'dibuat_pada', 'desc');
+
         return view('admin.lokasi-sekolah.index', [
-            'lokasiSekolah' => LokasiSekolah::query()->latest('dibuat_pada')->paginate(15),
+            'lokasiSekolah' => $query->paginate(15)->withQueryString(),
         ]);
     }
 

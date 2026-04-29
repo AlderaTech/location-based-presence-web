@@ -49,7 +49,7 @@ class AuthController extends Controller
         }
 
         PerangkatPengguna::query()->updateOrCreate(
-            ['pengguna_id' => $pengguna->id, 'id_perangkat' => $data['id_perangkat']],
+            ['id_pengguna' => $pengguna->id, 'id_perangkat' => $data['id_perangkat']],
             [
                 'nama_perangkat' => $data['nama_perangkat'] ?? null,
                 'platform' => $data['platform'] ?? 'android',
@@ -61,7 +61,7 @@ class AuthController extends Controller
 
         $tokenPolos = Str::random(80);
         TokenApi::create([
-            'pengguna_id' => $pengguna->id,
+            'id_pengguna' => $pengguna->id,
             'nama' => 'mobile',
             'hash_token' => hash('sha256', $tokenPolos),
             'id_perangkat' => $data['id_perangkat'],

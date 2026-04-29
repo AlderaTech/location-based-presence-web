@@ -4,15 +4,29 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\JadwalKerja;
+use App\Support\SortirAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class JadwalKerjaController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('admin.jadwal-kerja.index', ['jadwalKerja' => JadwalKerja::query()->latest('dibuat_pada')->paginate(15)]);
+        $query = JadwalKerja::query()
+            ->when($request->query('q'), fn ($query, string $q) => $query->where('nama', 'like', '%'.$q.'%'))
+            ->when($request->has('aktif') && $request->query('aktif') !== '', fn ($query) => $query->where('aktif', $request->boolean('aktif')));
+
+        SortirAdmin::terapkan($query, $request, [
+            'nama' => 'jadwal_kerja.nama',
+            'jam_masuk' => 'jadwal_kerja.jam_masuk',
+            'jam_pulang' => 'jadwal_kerja.jam_pulang',
+            'toleransi' => 'jadwal_kerja.toleransi_terlambat_menit',
+            'status' => 'jadwal_kerja.aktif',
+            'dibuat_pada' => 'jadwal_kerja.dibuat_pada',
+        ], 'dibuat_pada', 'desc');
+
+        return view('admin.jadwal-kerja.index', ['jadwalKerja' => $query->paginate(15)->withQueryString()]);
     }
 
     public function create(): View

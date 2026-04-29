@@ -9,3 +9,175 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer base {
+    html,
+    body {
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    a {
+        min-width: 0;
+    }
+}
+
+@layer components {
+    .admin-content {
+        padding: 1.5rem 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .admin-content {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .admin-content {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+
+    .admin-mobile-nav {
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-mobile-nav::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@media (max-width: 380px) {
+    .admin-content {
+        padding: 1rem 0.75rem;
+    }
+
+    .admin-content h1.text-2xl,
+    .admin-content h1.text-3xl {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+
+    .admin-content .text-3xl {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    .admin-content .p-4,
+    .admin-content .sm\:p-5,
+    .admin-content .sm\:p-6 {
+        padding: 0.75rem;
+    }
+
+    .admin-content .px-4 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .admin-content .py-3 {
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .admin-content form.grid {
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .admin-content form.grid input,
+    .admin-content form.grid select,
+    .admin-content form.grid textarea,
+    .admin-content form.grid button,
+    .admin-content form.grid a {
+        min-height: 2.5rem;
+        width: 100%;
+    }
+
+    .admin-content .grid-cols-2,
+    .admin-content .grid-cols-3 {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .admin-content .flex.gap-2 {
+        flex-wrap: wrap;
+    }
+
+    .admin-content .flex.gap-2 > a,
+    .admin-content .flex.gap-2 > button,
+    .admin-content .flex.gap-2 > form {
+        flex: 1 1 100%;
+    }
+
+    .admin-content .flex.gap-2 > form > button {
+        width: 100%;
+    }
+
+    .admin-content .overflow-x-auto {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-content .overflow-x-auto table {
+        min-width: 42rem;
+    }
+
+    .admin-content .overflow-x-auto th,
+    .admin-content .overflow-x-auto td {
+        padding: 0.625rem 0.75rem;
+    }
+
+    .admin-mobile-header {
+        padding: 0.75rem;
+    }
+
+    .admin-mobile-header .h-10 {
+        height: 2.25rem;
+    }
+
+    .admin-mobile-header .w-10 {
+        width: 2.25rem;
+    }
+
+    .admin-mobile-nav {
+        gap: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .admin-mobile-nav a {
+        padding: 0.45rem 0.55rem;
+    }
+
+    .admin-mobile-nav svg {
+        height: 0.875rem;
+        width: 0.875rem;
+    }
+
+    .auth-admin-panel {
+        padding: 1rem 0.75rem;
+    }
+
+    .auth-admin-brand {
+        margin-bottom: 1rem;
+    }
+
+    .auth-admin-form {
+        padding: 1rem;
+    }
+
+    .auth-admin-form h1 {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+}

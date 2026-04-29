@@ -10,7 +10,7 @@ class LogAuditPresensi extends Model
 
     protected $table = 'log_audit_presensi';
 
-    protected $fillable = ['presensi_id', 'pengguna_id', 'aktor_id', 'aksi', 'payload', 'dibuat_pada'];
+    protected $fillable = ['id_presensi', 'id_pengguna', 'id_aktor', 'aksi', 'payload', 'dibuat_pada'];
 
     protected function casts(): array
     {

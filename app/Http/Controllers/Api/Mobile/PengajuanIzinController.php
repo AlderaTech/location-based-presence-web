@@ -13,7 +13,7 @@ class PengajuanIzinController extends Controller
     {
         $items = PengajuanIzin::query()
             ->with('dokumen')
-            ->where('guru_id', $request->user()->guru?->id)
+            ->where('id_guru', $request->user()->guru?->id)
             ->latest('dibuat_pada')
             ->get()
             ->map(fn (PengajuanIzin $pengajuan) => [
@@ -46,8 +46,8 @@ class PengajuanIzinController extends Controller
 
         $guru = $request->user()->guru;
         $pengajuan = PengajuanIzin::create([
-            'pengguna_id' => $request->user()->id,
-            'guru_id' => $guru->id,
+            'id_pengguna' => $request->user()->id,
+            'id_guru' => $guru->id,
             'jenis' => $data['jenis'],
             'tanggal_mulai' => $data['tanggal_mulai'],
             'tanggal_selesai' => $data['tanggal_selesai'],

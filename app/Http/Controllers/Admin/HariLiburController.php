@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\HariLibur;
+use App\Support\SortirAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,10 +12,22 @@ use Illuminate\View\View;
 
 class HariLiburController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = HariLibur::query()
+            ->when($request->query('q'), fn ($query, string $q) => $query->where('nama', 'like', '%'.$q.'%'))
+            ->when($request->query('jenis'), fn ($query, string $jenis) => $query->where('jenis', $jenis))
+            ->when($request->query('tanggal_mulai'), fn ($query, $tanggal) => $query->whereDate('tanggal', '>=', $tanggal))
+            ->when($request->query('tanggal_selesai'), fn ($query, $tanggal) => $query->whereDate('tanggal', '<=', $tanggal));
+
+        SortirAdmin::terapkan($query, $request, [
+            'tanggal' => 'hari_libur.tanggal',
+            'nama' => 'hari_libur.nama',
+            'jenis' => 'hari_libur.jenis',
+        ], 'tanggal', 'desc');
+
         return view('admin.hari-libur.index', [
-            'hariLibur' => HariLibur::query()->orderByDesc('tanggal')->paginate(15),
+            'hariLibur' => $query->paginate(15)->withQueryString(),
         ]);
     }
 

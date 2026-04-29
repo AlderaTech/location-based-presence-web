@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pengguna;
+use App\Support\SortirAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,10 +13,30 @@ use Illuminate\View\View;
 
 class PenggunaAdminController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = Pengguna::query()
+            ->whereIn('peran', ['admin', 'tata_usaha', 'kepala_sekolah'])
+            ->when($request->query('q'), function ($query, string $q): void {
+                $query->where(function ($query) use ($q): void {
+                    $query->where('nama', 'like', '%'.$q.'%')
+                        ->orWhere('email', 'like', '%'.$q.'%')
+                        ->orWhere('telepon', 'like', '%'.$q.'%');
+                });
+            })
+            ->when($request->query('peran'), fn ($query, string $peran) => $query->where('peran', $peran))
+            ->when($request->query('status'), fn ($query, string $status) => $query->where('status', $status));
+
+        SortirAdmin::terapkan($query, $request, [
+            'nama' => 'pengguna.nama',
+            'email' => 'pengguna.email',
+            'peran' => 'pengguna.peran',
+            'status' => 'pengguna.status',
+            'dibuat_pada' => 'pengguna.dibuat_pada',
+        ], 'dibuat_pada', 'desc');
+
         return view('admin.pengguna-admin.index', [
-            'penggunaAdmin' => Pengguna::query()->whereIn('peran', ['admin', 'tata_usaha', 'kepala_sekolah'])->latest('dibuat_pada')->paginate(15),
+            'penggunaAdmin' => $query->paginate(15)->withQueryString(),
         ]);
     }
 

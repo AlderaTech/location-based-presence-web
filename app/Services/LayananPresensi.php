@@ -31,7 +31,7 @@ class LayananPresensi
 
         if (! empty($payload['lokasi_palsu'])) {
             LogAuditPresensi::create([
-                'pengguna_id' => $pengguna->id,
+                'id_pengguna' => $pengguna->id,
                 'aksi' => 'lokasi_palsu_diblokir',
                 'payload' => $payload,
                 'dibuat_pada' => now(),
@@ -73,14 +73,14 @@ class LayananPresensi
         }
 
         $presensi = Presensi::query()->firstOrNew([
-            'guru_id' => $guru->id,
+            'id_guru' => $guru->id,
             'tanggal_presensi' => $hariIni->toDateString(),
         ]);
 
         $presensi->fill([
-            'pengguna_id' => $pengguna->id,
-            'lokasi_sekolah_id' => $lokasi->id,
-            'jadwal_kerja_id' => $jadwalKerja->id,
+            'id_pengguna' => $pengguna->id,
+            'id_lokasi_sekolah' => $lokasi->id,
+            'id_jadwal_kerja' => $jadwalKerja->id,
             'id_perangkat' => $payload['id_perangkat'],
         ]);
 
@@ -119,8 +119,8 @@ class LayananPresensi
         $presensi->save();
 
         LogAuditPresensi::create([
-            'presensi_id' => $presensi->id,
-            'pengguna_id' => $pengguna->id,
+            'id_presensi' => $presensi->id,
+            'id_pengguna' => $pengguna->id,
             'aksi' => 'presensi_'.$payload['jenis'],
             'payload' => [
                 'jarak_meter' => $jarak,

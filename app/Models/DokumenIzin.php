@@ -12,10 +12,10 @@ class DokumenIzin extends Model
 
     protected $table = 'dokumen_izin';
 
-    protected $fillable = ['pengajuan_izin_id', 'disk', 'path', 'nama_asli', 'tipe_mime', 'ukuran'];
+    protected $fillable = ['id_pengajuan_izin', 'disk', 'path', 'nama_asli', 'tipe_mime', 'ukuran'];
 
     public function pengajuanIzin(): BelongsTo
     {
-        return $this->belongsTo(PengajuanIzin::class, 'pengajuan_izin_id');
+        return $this->belongsTo(PengajuanIzin::class, 'id_pengajuan_izin');
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Guru;
 use App\Models\JadwalKerja;
 use App\Models\Pengguna;
+use App\Support\SortirAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +18,42 @@ class GuruController extends Controller
 {
     public function index(Request $request): View
     {
-        $guru = Guru::query()
+        $query = Guru::query()
             ->with(['pengguna', 'jadwalKerjaBawaan'])
             ->when($request->query('q'), function ($query, string $q): void {
-                $query->whereHas('pengguna', fn ($pengguna) => $pengguna
-                    ->where('nama', 'like', '%'.$q.'%')
-                    ->orWhere('email', 'like', '%'.$q.'%')
-                    ->orWhere('nomor_pegawai', 'like', '%'.$q.'%'));
+                $query->where(function ($query) use ($q): void {
+                    $query->whereHas('pengguna', fn ($pengguna) => $pengguna
+                        ->where('nama', 'like', '%'.$q.'%')
+                        ->orWhere('email', 'like', '%'.$q.'%')
+                        ->orWhere('nomor_pegawai', 'like', '%'.$q.'%'))
+                        ->orWhere('nip', 'like', '%'.$q.'%');
+                });
             })
-            ->latest('dibuat_pada')
+            ->when($request->query('status'), function ($query, string $status): void {
+                $query->whereHas('pengguna', fn ($pengguna) => $pengguna->where('status', $status));
+            })
+            ->when($request->query('id_jadwal_kerja'), fn ($query, $id) => $query->where('id_jadwal_kerja_bawaan', $id))
+            ->when($request->query('mata_pelajaran'), fn ($query, string $mataPelajaran) => $query->where('mata_pelajaran', 'like', '%'.$mataPelajaran.'%'));
+
+        SortirAdmin::terapkan($query, $request, [
+            'nama' => fn ($query, string $arah) => $query->orderBy(
+                Pengguna::query()->select('nama')->whereColumn('pengguna.id', 'guru.id_pengguna'),
+                $arah
+            ),
+            'nip' => 'nip',
+            'mata_pelajaran' => 'mata_pelajaran',
+            'jadwal' => fn ($query, string $arah) => $query->orderBy(
+                JadwalKerja::query()->select('nama')->whereColumn('jadwal_kerja.id', 'guru.id_jadwal_kerja_bawaan'),
+                $arah
+            ),
+            'status' => fn ($query, string $arah) => $query->orderBy(
+                Pengguna::query()->select('status')->whereColumn('pengguna.id', 'guru.id_pengguna'),
+                $arah
+            ),
+            'dibuat_pada' => 'guru.dibuat_pada',
+        ], 'dibuat_pada', 'desc');
+
+        $guru = $query
             ->paginate(15)
             ->withQueryString();
 
@@ -60,8 +88,8 @@ class GuruController extends Controller
             ]);
 
             Guru::create([
-                'pengguna_id' => $pengguna->id,
-                'jadwal_kerja_bawaan_id' => $data['jadwal_kerja_bawaan_id'] ?? null,
+                'id_pengguna' => $pengguna->id,
+                'id_jadwal_kerja_bawaan' => $data['id_jadwal_kerja_bawaan'] ?? null,
                 'nip' => $data['nip'] ?? null,
                 'mata_pelajaran' => $data['mata_pelajaran'] ?? null,
                 'jabatan' => $data['jabatan'] ?? null,
@@ -102,7 +130,7 @@ class GuruController extends Controller
 
             $guru->pengguna->update($penggunaData);
             $guru->update([
-                'jadwal_kerja_bawaan_id' => $data['jadwal_kerja_bawaan_id'] ?? null,
+                'id_jadwal_kerja_bawaan' => $data['id_jadwal_kerja_bawaan'] ?? null,
                 'nip' => $data['nip'] ?? null,
                 'mata_pelajaran' => $data['mata_pelajaran'] ?? null,
                 'jabatan' => $data['jabatan'] ?? null,
@@ -133,7 +161,7 @@ class GuruController extends Controller
 
     private function validateData(Request $request, ?Guru $guru = null): array
     {
-        $penggunaId = $guru?->pengguna_id;
+        $penggunaId = $guru?->id_pengguna;
 
         return $request->validate([
             'nama' => ['required', 'string', 'max:191'],
@@ -142,7 +170,7 @@ class GuruController extends Controller
             'nomor_pegawai' => ['nullable', 'string', 'max:100', Rule::unique('pengguna', 'nomor_pegawai')->ignore($penggunaId)],
             'telepon' => ['nullable', 'string', 'max:50'],
             'status' => ['required', 'in:aktif,nonaktif'],
-            'jadwal_kerja_bawaan_id' => ['nullable', 'exists:jadwal_kerja,id'],
+            'id_jadwal_kerja_bawaan' => ['nullable', 'exists:jadwal_kerja,id'],
             'nip' => ['nullable', 'string', 'max:100', Rule::unique('guru', 'nip')->ignore($guru?->id)],
             'mata_pelajaran' => ['nullable', 'string', 'max:191'],
             'jabatan' => ['nullable', 'string', 'max:191'],
