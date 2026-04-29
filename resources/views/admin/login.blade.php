@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk Admin Presensi</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <script>
         window.presensiNotifikasi = @json([
             'sukses' => session('status'),
@@ -22,7 +24,7 @@
 
             <div class="relative">
                 <div class="flex items-center gap-3">
-                    <div class="grid h-11 w-11 place-items-center rounded-md bg-white text-sm font-bold text-teal-800 shadow-sm">PG</div>
+                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
                     <div>
                         <p class="text-lg font-semibold">Presensi Guru</p>
                         <p class="text-sm text-slate-300">Dasbor pengelola sekolah</p>
@@ -72,7 +74,7 @@
         <section class="auth-admin-panel flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
             <div class="w-full max-w-md">
                 <div class="auth-admin-brand mb-6 flex items-center gap-3 lg:hidden">
-                    <div class="grid h-11 w-11 place-items-center rounded-md bg-teal-700 text-sm font-bold text-white shadow-sm">PG</div>
+                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
                     <div>
                         <p class="text-lg font-semibold">Presensi Guru</p>
                         <p class="text-sm text-slate-500">Dasbor pengelola sekolah</p>

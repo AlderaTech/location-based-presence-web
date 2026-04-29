@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Presensi' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <script>
         window.presensiNotifikasi = @json([
             'sukses' => session('status'),
@@ -29,14 +31,13 @@
             ['admin.pengguna-admin.index', 'Akun Admin', 'shield-check'],
         ];
         $semuaNavigasi = [...$navigasiUtama, ...$navigasiMaster];
-        $inisial = str(auth()->user()->nama ?? 'A')->substr(0, 1)->upper();
     @endphp
 
     <div class="min-h-screen">
         <aside class="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-900/10 bg-slate-950 text-white shadow-2xl shadow-slate-900/20 lg:flex lg:flex-col">
             <div class="border-b border-white/10 px-5 py-5">
                 <div class="flex items-center gap-3">
-                    <div class="grid h-11 w-11 place-items-center rounded-md bg-teal-400 text-sm font-black text-slate-950">PG</div>
+                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
                     <div class="min-w-0">
                         <p class="truncate text-lg font-semibold">Presensi Guru</p>
                         <p class="truncate text-sm text-slate-400">Panel administrasi</p>
@@ -47,7 +48,7 @@
             <div class="flex-1 overflow-y-auto px-3 py-4">
                 <div class="mb-5 rounded-md border border-white/10 bg-white/[0.06] p-3">
                     <div class="flex items-center gap-3">
-                        <div class="grid h-10 w-10 place-items-center rounded-md bg-white text-sm font-semibold text-slate-950">{{ $inisial }}</div>
+                        <img src="{{ asset('assets/brand/avatar-placeholder.png') }}" alt="Avatar admin" class="h-10 w-10 rounded-full bg-white object-cover ring-2 ring-white/10">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-medium">{{ auth()->user()->nama ?? '' }}</p>
                             <p class="truncate text-xs capitalize text-slate-400">{{ str_replace('_', ' ', auth()->user()->peran ?? '') }}</p>
@@ -99,7 +100,7 @@
             <header class="admin-mobile-header sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm shadow-slate-900/5 backdrop-blur lg:hidden">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="grid h-10 w-10 place-items-center rounded-md bg-slate-950 text-sm font-black text-teal-300">PG</div>
+                        <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-10 w-10 rounded-md bg-white object-contain p-1 shadow-sm">
                         <div>
                             <p class="font-semibold">Presensi Guru</p>
                             <p class="text-xs text-slate-500">{{ auth()->user()->nama ?? '' }}</p>
