@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LaporanController extends Controller
 {
@@ -28,7 +29,7 @@ class LaporanController extends Controller
         ]);
     }
 
-    public function ekspor(Request $request, string $format): Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function ekspor(Request $request, string $format): Response|BinaryFileResponse
     {
         $rows = $this->rows($this->query($request)->get());
         $metadata = $this->metadata($request);
@@ -101,7 +102,7 @@ class LaporanController extends Controller
 
     private function rows(iterable $presensi): array
     {
-        $rows = [['Tanggal', 'Nama Guru', 'NIP/Nomor Pegawai', 'Status', 'Jam Masuk', 'Jam Pulang', 'Jadwal Kerja', 'Lokasi', 'Jarak', 'Catatan']];
+        $rows = [['Tanggal', 'Nama Guru', 'NIP atau Nomor Pegawai', 'Status', 'Jam Masuk', 'Jam Pulang', 'Jadwal Kerja', 'Lokasi', 'Jarak', 'Catatan']];
 
         foreach ($presensi as $item) {
             $rows[] = [
@@ -138,7 +139,7 @@ class LaporanController extends Controller
         $tanggalMulai = $request->query('tanggal_mulai') ?: null;
         $tanggalSelesai = $request->query('tanggal_selesai') ?: null;
         $periode = match (true) {
-            filled($tanggalMulai) && filled($tanggalSelesai) => $tanggalMulai.' s.d. '.$tanggalSelesai,
+            filled($tanggalMulai) && filled($tanggalSelesai) => $tanggalMulai.' sampai '.$tanggalSelesai,
             filled($tanggalMulai) => 'Mulai '.$tanggalMulai,
             filled($tanggalSelesai) => 'Sampai '.$tanggalSelesai,
             default => 'Semua tanggal',
@@ -170,10 +171,10 @@ class LaporanController extends Controller
 
     private function formatJarak(Presensi $item): string
     {
-        $masuk = $item->jarak_masuk_meter !== null ? 'Masuk '.$item->jarak_masuk_meter.' m' : null;
-        $pulang = $item->jarak_pulang_meter !== null ? 'Pulang '.$item->jarak_pulang_meter.' m' : null;
+        $masuk = $item->jarak_masuk_meter !== null ? 'Masuk '.$item->jarak_masuk_meter.' meter' : null;
+        $pulang = $item->jarak_pulang_meter !== null ? 'Pulang '.$item->jarak_pulang_meter.' meter' : null;
 
-        return implode(' / ', array_filter([$masuk, $pulang])) ?: '-';
+        return implode('; ', array_filter([$masuk, $pulang])) ?: '-';
     }
 
     private function formatCatatan(Presensi $item): string

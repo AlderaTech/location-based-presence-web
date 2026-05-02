@@ -1,6 +1,205 @@
 # Presensi Web
 
-Backend API dan dashboard admin Presensi Guru berbasis Laravel.
+Backend API dan dashboard administrasi Presensi Guru berbasis Laravel. Aplikasi web ini menjadi pusat pengelolaan data sekolah, validasi presensi berbasis lokasi, persetujuan pengajuan izin, analitik, serta ekspor laporan.
+
+## Ringkasan Bisnis
+
+Presensi Guru dirancang untuk membantu sekolah memantau kehadiran guru secara lebih akurat dengan validasi lokasi sekolah. Guru mencatat presensi dari aplikasi mobile, sedangkan pengelola sekolah memantau data, mengelola master data, meninjau pengajuan izin, dan mengekspor rekap untuk arsip atau kebutuhan administrasi.
+
+Tujuan utama:
+
+- Mengurangi presensi manual dan kesalahan rekap.
+- Memvalidasi presensi berdasarkan radius lokasi sekolah.
+- Mendeteksi indikasi lokasi palsu dari aplikasi mobile.
+- Menyediakan laporan kehadiran yang siap diekspor.
+- Memisahkan hak akses operasional admin dan monitoring kepala sekolah.
+
+## Role dan Hak Akses
+
+| Role | Fokus | Fitur |
+| --- | --- | --- |
+| Admin | Operasional penuh | Dashboard, kelola guru, reset perangkat guru, lokasi sekolah, jadwal kerja, hari libur, akun admin/kepala sekolah, koreksi presensi, setujui/tolak izin, laporan, ekspor PDF/XLSX. |
+| Kepala Sekolah | Analitik dan pelaporan | Dashboard analitik, data presensi read-only, monitoring pengajuan izin read-only, laporan, ekspor PDF/XLSX. |
+| Guru | Pengguna mobile | Masuk dari aplikasi mobile, presensi masuk/pulang, riwayat presensi, pengajuan izin/sakit/cuti, profil dan notifikasi. |
+
+Role `tata_usaha` sudah digabungkan ke `admin`. Migration `2026_05_02_000001_gabungkan_role_tata_usaha_ke_admin.php` akan mengubah data lama dengan role `tata_usaha` menjadi `admin`.
+
+## Fitur Web
+
+- Dashboard analitik: ringkasan kehadiran hari ini, tren harian, status bulanan, pengajuan izin, guru belum presensi, dan presensi terbaru.
+- Manajemen guru: akun guru, jadwal bawaan, status aktif/nonaktif, dan reset perangkat terikat.
+- Manajemen lokasi sekolah: titik latitude/longitude, radius validasi, dan status lokasi.
+- Manajemen jadwal kerja: jam masuk, jam pulang, toleransi keterlambatan, dan status jadwal.
+- Manajemen hari libur: libur sekolah/nasional untuk pengecualian presensi.
+- Data presensi: filter, sort, deteksi lokasi palsu, status presensi, dan koreksi manual oleh admin.
+- Pengajuan izin: pantau izin/sakit/cuti, dokumen pendukung, persetujuan, penolakan, dan alasan penolakan.
+- Laporan: filter lanjutan, sort, ekspor PDF landscape, dan ekspor XLSX dengan filter/freeze header.
+- Audit: pencatatan koreksi presensi, approval izin, dan percobaan lokasi palsu.
+- API mobile: autentikasi guru, profil, presensi, riwayat, jadwal, hari libur, dan pengajuan izin.
+
+## Stack Teknis
+
+- PHP `^8.4`
+- Laravel `^13.0`
+- MySQL atau database SQL kompatibel Laravel
+- Session, cache, dan queue berbasis database
+- Vite `^8`, Tailwind CSS `^4`
+- Chart.js untuk grafik dashboard
+- Lucide untuk ikon
+- SweetAlert2 untuk dialog konfirmasi
+- PHPUnit untuk test
+
+## Struktur Penting
+
+```text
+app/Http/Controllers/Admin      Controller dashboard dan halaman admin
+app/Http/Controllers/Api/Mobile API untuk aplikasi mobile guru
+app/Http/Middleware             Middleware akses admin, role, dan token mobile
+app/Services/LayananPresensi    Logika presensi dan validasi lokasi
+app/Support                     Formatter, export PDF/XLSX, sorting, session handler
+database/migrations             Skema database
+database/seeders                Seeder demo
+resources/views/admin           Blade dashboard admin
+resources/css, resources/js     Asset frontend Vite
+routes/web.php                  Route dashboard web
+routes/api.php                  Route API mobile
+tests                           Test fitur dan unit
+```
+
+## Instalasi Lokal
+
+1. Install dependency PHP dan JavaScript.
+
+```bash
+composer install
+npm install
+```
+
+2. Siapkan `.env`.
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+3. Sesuaikan konfigurasi database di `.env`.
+
+```env
+APP_NAME="Presensi Guru"
+APP_TIMEZONE=Asia/Jakarta
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=location_based_presence
+DB_USERNAME=root
+DB_PASSWORD=
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+```
+
+4. Jalankan migrasi dan seeder demo.
+
+```bash
+php artisan migrate --seed
+```
+
+5. Jalankan frontend dan server.
+
+```bash
+npm run dev
+php artisan serve
+```
+
+Dashboard tersedia di `http://127.0.0.1:8000/admin`.
+
+## Akun Demo
+
+Seeder demo membuat akun berikut dengan password default `password`.
+
+| Role | Email |
+| --- | --- |
+| Admin | `admin@presensi.test` |
+| Kepala Sekolah | `kepsek@presensi.test` |
+| Guru | `guru@presensi.test` |
+
+## API Mobile
+
+Base URL lokal umum:
+
+```text
+http://127.0.0.1:8000/api/mobile
+```
+
+Untuk emulator Android gunakan:
+
+```text
+http://10.0.2.2:8000/api/mobile
+```
+
+Endpoint utama:
+
+| Method | Endpoint | Keterangan |
+| --- | --- | --- |
+| POST | `/autentikasi/masuk` | Login guru dan ikat perangkat pertama. |
+| POST | `/autentikasi/keluar` | Logout token mobile. |
+| GET | `/profil` | Profil guru aktif. |
+| PUT | `/profil/pengaturan-notifikasi` | Ubah status notifikasi guru. |
+| GET | `/jadwal-kerja` | Jadwal kerja guru dan lokasi aktif. |
+| GET | `/hari-libur` | Daftar hari libur. |
+| GET | `/presensi/hari-ini` | Status presensi hari ini. |
+| POST | `/presensi/catat` | Catat presensi masuk/pulang. |
+| GET | `/presensi/riwayat` | Riwayat presensi bulanan. |
+| GET | `/pengajuan-izin` | Riwayat pengajuan izin guru. |
+| POST | `/pengajuan-izin` | Kirim izin/sakit/cuti dengan dokumen opsional. |
+
+## Alur Presensi
+
+1. Admin membuat akun guru, jadwal kerja, dan lokasi sekolah aktif.
+2. Guru login dari aplikasi mobile. Perangkat pertama yang berhasil login akan terikat.
+3. Aplikasi mobile mengirim latitude, longitude, akurasi, status lokasi palsu, dan ID perangkat.
+4. Backend memvalidasi akun, perangkat, hari libur, jadwal, radius lokasi, dan lokasi palsu.
+5. Presensi masuk/pulang tersimpan dan audit dibuat jika ada kejadian penting.
+6. Admin dapat mengoreksi presensi manual dengan alasan koreksi.
+7. Kepala sekolah memantau analitik dan laporan tanpa akses mutasi data.
+
+## Laporan dan Ekspor
+
+Laporan presensi mendukung filter:
+
+- Kata kunci guru/email/NIP
+- Guru
+- Status presensi
+- Jadwal kerja
+- Lokasi sekolah
+- Validasi lokasi palsu
+- Rentang tanggal
+- Sort kolom
+
+Format ekspor:
+
+- `PDF`: laporan landscape untuk arsip/cetak.
+- `XLSX`: spreadsheet dengan header rapi, filter, dan freeze pane.
+
+## Testing dan Kualitas
+
+Jalankan seluruh test:
+
+```bash
+php artisan test
+```
+
+Jalankan formatter:
+
+```bash
+./vendor/bin/pint
+```
+
+Build asset produksi:
+
+```bash
+npm run build
+```
 
 ## CI/CD
 
@@ -30,65 +229,9 @@ Contoh pull image:
 docker pull ghcr.io/<owner>/<repo>:latest
 ```
 
-Jika tab Packages masih kosong setelah workflow sukses, pastikan repository sudah berada di root repo GitHub yang benar dan workflow memiliki permission `packages: write`.
+Jika tab Packages masih kosong setelah workflow sukses, pastikan repository berada di root repo GitHub yang benar dan workflow memiliki permission `packages: write`.
 
----
+## Branding
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Logo aplikasi web berada di `public/assets/brand/logo.png`.
+Favicon web berada di `public/favicon.png` dan `public/favicon.ico`.

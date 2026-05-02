@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Models\DokumenIzin;
 use App\Models\Guru;
 use App\Models\JadwalKerja;
 use App\Models\LokasiSekolah;
 use App\Models\Pengguna;
 use App\Models\Presensi;
+use Database\Seeders\PresensiDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PresensiMobileTest extends TestCase
@@ -97,6 +101,68 @@ class PresensiMobileTest extends TestCase
         $this->assertDatabaseHas('log_audit_presensi', [
             'id_pengguna' => $guru->id_pengguna,
             'aksi' => 'lokasi_palsu_diblokir',
+        ]);
+    }
+
+    public function test_seeder_membuat_surat_sakit_demo_berformat_pdf(): void
+    {
+        Storage::fake('public');
+
+        $this->seed(PresensiDemoSeeder::class);
+
+        $this->assertDatabaseHas('dokumen_izin', [
+            'nama_asli' => 'surat-sakit-g001.pdf',
+            'tipe_mime' => 'application/pdf',
+        ]);
+
+        $dokumen = DokumenIzin::query()
+            ->where('nama_asli', 'surat-sakit-g001.pdf')
+            ->firstOrFail();
+
+        Storage::disk('public')->assertExists($dokumen->path);
+        $this->assertStringStartsWith('%PDF-1.4', Storage::disk('public')->get($dokumen->path));
+    }
+
+    public function test_pengajuan_izin_mobile_menolak_dokumen_txt(): void
+    {
+        $guru = $this->buatGuru();
+        $token = $this->masuk($guru);
+
+        $this->withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer '.$token,
+        ])->post('/api/mobile/pengajuan-izin', [
+            'jenis' => 'sakit',
+            'tanggal_mulai' => today()->addDay()->toDateString(),
+            'tanggal_selesai' => today()->addDay()->toDateString(),
+            'alasan' => 'Demam.',
+            'dokumen' => UploadedFile::fake()->createWithContent('surat-sakit.txt', 'Surat sakit demo'),
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors('dokumen');
+    }
+
+    public function test_pengajuan_izin_mobile_menerima_dokumen_pdf(): void
+    {
+        Storage::fake('public');
+
+        $guru = $this->buatGuru();
+        $token = $this->masuk($guru);
+
+        $this->withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer '.$token,
+        ])->post('/api/mobile/pengajuan-izin', [
+            'jenis' => 'sakit',
+            'tanggal_mulai' => today()->addDay()->toDateString(),
+            'tanggal_selesai' => today()->addDay()->toDateString(),
+            'alasan' => 'Demam.',
+            'dokumen' => UploadedFile::fake()->create('surat-sakit.pdf', 100, 'application/pdf'),
+        ])->assertCreated()
+            ->assertJsonPath('pengajuan_izin.jenis', 'sakit');
+
+        $this->assertDatabaseHas('dokumen_izin', [
+            'nama_asli' => 'surat-sakit.pdf',
+            'tipe_mime' => 'application/pdf',
         ]);
     }
 

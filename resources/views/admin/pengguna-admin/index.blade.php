@@ -2,7 +2,6 @@
     @php
         $labelPeran = [
             'admin' => 'Admin',
-            'tata_usaha' => 'Tata Usaha',
             'kepala_sekolah' => 'Kepala Sekolah',
         ];
     @endphp
@@ -10,7 +9,7 @@
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-semibold">Akun Admin</h1>
-            <p class="text-sm text-slate-500">Kelola Admin, Tata Usaha, dan Kepala Sekolah.</p>
+            <p class="text-sm text-slate-500">Kelola Admin dan Kepala Sekolah.</p>
         </div>
         <a href="{{ route('admin.pengguna-admin.create') }}" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Tambah Akun</a>
     </div>

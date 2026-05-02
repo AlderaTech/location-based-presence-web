@@ -16,7 +16,7 @@ class PenggunaAdminController extends Controller
     public function index(Request $request): View
     {
         $query = Pengguna::query()
-            ->whereIn('peran', ['admin', 'tata_usaha', 'kepala_sekolah'])
+            ->whereIn('peran', ['admin', 'kepala_sekolah'])
             ->when($request->query('q'), function ($query, string $q): void {
                 $query->where(function ($query) use ($q): void {
                     $query->where('nama', 'like', '%'.$q.'%')
@@ -42,7 +42,7 @@ class PenggunaAdminController extends Controller
 
     public function create(): View
     {
-        return view('admin.pengguna-admin.form', ['pengguna' => new Pengguna(['peran' => 'tata_usaha', 'status' => 'aktif'])]);
+        return view('admin.pengguna-admin.form', ['pengguna' => new Pengguna(['peran' => 'admin', 'status' => 'aktif'])]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -90,7 +90,7 @@ class PenggunaAdminController extends Controller
             'email' => ['required', 'email', 'max:191', Rule::unique('pengguna', 'email')->ignore($pengguna?->id)],
             'kata_sandi' => [$pengguna ? 'nullable' : 'required', 'string', 'min:6'],
             'telepon' => ['nullable', 'string', 'max:50'],
-            'peran' => ['required', 'in:admin,tata_usaha,kepala_sekolah'],
+            'peran' => ['required', 'in:admin,kepala_sekolah'],
             'status' => ['required', 'in:aktif,nonaktif'],
         ]);
     }

@@ -41,7 +41,7 @@ class PengajuanIzinController extends Controller
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'alasan' => ['required', 'string', 'max:2000'],
-            'dokumen' => ['nullable', 'file', 'max:4096'],
+            'dokumen' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:4096'],
         ]);
 
         $guru = $request->user()->guru;

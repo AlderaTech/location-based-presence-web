@@ -15,17 +15,18 @@
         $statusAktif = request('status');
         $jenisAktif = request('jenis');
         $queryFilter = request()->except(['page']);
+        $bolehMeninjau = auth()->user()->peran === 'admin';
     @endphp
 
     <div class="space-y-6">
         <section class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm shadow-slate-900/5">
             <div class="grid lg:grid-cols-[minmax(0,1fr)_340px]">
                 <div class="p-5 sm:p-6">
-                    <p class="text-sm font-medium text-teal-700">Persetujuan Izin</p>
+                    <p class="text-sm font-medium text-teal-700">{{ $bolehMeninjau ? 'Persetujuan Izin' : 'Monitoring Izin' }}</p>
                     <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Kelola Pengajuan Guru</h1>
-                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Tinjau izin, sakit, dan cuti dengan konteks tanggal, dokumen pendukung, status, dan alasan penolakan.</p>
+                            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ $bolehMeninjau ? 'Kelola Pengajuan Guru' : 'Pantau Pengajuan Guru' }}</h1>
+                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{{ $bolehMeninjau ? 'Tinjau izin, sakit, dan cuti dengan konteks tanggal, dokumen pendukung, status, dan alasan penolakan.' : 'Pantau izin, sakit, dan cuti dengan konteks tanggal, dokumen pendukung, status, dan alasan penolakan.' }}</p>
                         </div>
                         <a href="{{ route('admin.laporan.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">
                             <i data-lucide="chart-column-big"></i>
@@ -96,10 +97,10 @@
                         <option value="{{ $jenis }}" @selected($jenisAktif === $jenis)>{{ $label }}</option>
                     @endforeach
                 </select>
-                <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" title="Tanggal izin mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" title="Tanggal izin selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="diajukan_mulai" type="date" value="{{ request('diajukan_mulai') }}" title="Tanggal pengajuan mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="diajukan_selesai" type="date" value="{{ request('diajukan_selesai') }}" title="Tanggal pengajuan selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" placeholder="Tanggal izin mulai" title="Tanggal izin mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" placeholder="Tanggal izin selesai" title="Tanggal izin selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                <input name="diajukan_mulai" type="date" value="{{ request('diajukan_mulai') }}" placeholder="Tanggal pengajuan mulai" title="Tanggal pengajuan mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                <input name="diajukan_selesai" type="date" value="{{ request('diajukan_selesai') }}" placeholder="Tanggal pengajuan selesai" title="Tanggal pengajuan selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
                 <select name="sort" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
                     <option value="dibuat_pada" @selected(request('sort', 'dibuat_pada') === 'dibuat_pada')>Urut: Diajukan</option>
                     <option value="nama" @selected(request('sort') === 'nama')>Urut: Nama Guru</option>
@@ -196,7 +197,7 @@
                                 <p class="mt-1 text-sm font-semibold">{{ $pengajuan->dibuat_pada?->format('d M Y, H:i') }}</p>
                             </div>
 
-                            @if ($pengajuan->status === 'menunggu')
+                            @if ($pengajuan->status === 'menunggu' && $bolehMeninjau)
                                 <div class="space-y-3">
                                     <form method="post" action="{{ route('admin.pengajuan-izin.setujui', $pengajuan) }}" data-confirm data-confirm-title="Setujui pengajuan?" data-confirm-text="Sistem akan membuat atau memperbarui catatan presensi sesuai tanggal pengajuan." data-confirm-button="Setujui" data-confirm-variant="success">
                                         @csrf
@@ -214,6 +215,12 @@
                                             Tolak Pengajuan
                                         </button>
                                     </form>
+                                </div>
+                            @elseif ($pengajuan->status === 'menunggu')
+                                <div class="rounded-md bg-white p-3">
+                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Status</p>
+                                    <p class="mt-1 text-sm font-semibold text-amber-700">Menunggu peninjauan admin</p>
+                                    <p class="mt-1 text-xs text-slate-500">Kepala sekolah dapat memantau pengajuan tanpa menyetujui atau menolak.</p>
                                 </div>
                             @else
                                 <div class="rounded-md bg-white p-3">

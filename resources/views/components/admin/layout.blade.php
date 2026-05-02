@@ -13,23 +13,31 @@
             'galat' => $errors->any() ? ($errors->count() > 1 ? 'Periksa kembali isian formulir. '.$errors->first() : $errors->first()) : null,
         ]);
     </script>
+    @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-[#F3F7F6] text-slate-900 antialiased">
     @php
-        $navigasiUtama = [
+        $peranAktif = auth()->user()->peran ?? null;
+        $penggunaAdmin = $peranAktif === 'admin';
+        $navigasiUtama = $penggunaAdmin ? [
             ['admin.dashboard', 'Dasbor', 'layout-dashboard'],
             ['admin.guru.index', 'Data Guru', 'users-round'],
             ['admin.presensi.index', 'Data Presensi', 'clipboard-check'],
             ['admin.pengajuan-izin.index', 'Persetujuan Izin', 'file-check-2'],
             ['admin.laporan.index', 'Laporan', 'chart-column-big'],
+        ] : [
+            ['admin.dashboard', 'Dasbor', 'layout-dashboard'],
+            ['admin.presensi.index', 'Data Presensi', 'clipboard-check'],
+            ['admin.pengajuan-izin.index', 'Pengajuan Izin', 'file-check-2'],
+            ['admin.laporan.index', 'Laporan', 'chart-column-big'],
         ];
-        $navigasiMaster = [
+        $navigasiMaster = $penggunaAdmin ? [
             ['admin.lokasi-sekolah.index', 'Lokasi Sekolah', 'map-pin'],
             ['admin.jadwal-kerja.index', 'Jadwal Kerja', 'calendar-clock'],
             ['admin.hari-libur.index', 'Hari Libur', 'calendar-days'],
             ['admin.pengguna-admin.index', 'Akun Admin', 'shield-check'],
-        ];
+        ] : [];
         $semuaNavigasi = [...$navigasiUtama, ...$navigasiMaster];
     @endphp
 
@@ -70,18 +78,20 @@
                         </div>
                     </div>
 
-                    <div>
-                        <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Master Data</p>
-                        <div class="space-y-1">
-                            @foreach ($navigasiMaster as [$route, $label, $icon])
-                                @php $aktif = request()->routeIs($route); @endphp
-                                <a href="{{ route($route) }}" class="group flex items-center gap-3 rounded-md px-3 py-2.5 transition {{ $aktif ? 'bg-sky-300 text-slate-950 shadow-sm shadow-sky-950/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                                    <i data-lucide="{{ $icon }}" class="{{ $aktif ? 'text-slate-950' : 'text-slate-500 group-hover:text-sky-200' }}"></i>
-                                    <span class="font-medium">{{ $label }}</span>
-                                </a>
-                            @endforeach
+                    @if ($navigasiMaster !== [])
+                        <div>
+                            <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Master Data</p>
+                            <div class="space-y-1">
+                                @foreach ($navigasiMaster as [$route, $label, $icon])
+                                    @php $aktif = request()->routeIs($route); @endphp
+                                    <a href="{{ route($route) }}" class="group flex items-center gap-3 rounded-md px-3 py-2.5 transition {{ $aktif ? 'bg-sky-300 text-slate-950 shadow-sm shadow-sky-950/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                                        <i data-lucide="{{ $icon }}" class="{{ $aktif ? 'text-slate-950' : 'text-slate-500 group-hover:text-sky-200' }}"></i>
+                                        <span class="font-medium">{{ $label }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </nav>
             </div>
 
@@ -128,5 +138,6 @@
             </section>
         </main>
     </div>
+    @stack('scripts')
 </body>
 </html>

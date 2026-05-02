@@ -51,6 +51,7 @@
             ],
             'pengajuan' => $pengajuanChart,
         ];
+        $bolehMeninjau = auth()->user()->peran === 'admin';
     @endphp
 
     <script>
@@ -251,7 +252,7 @@
                 <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                     <div class="flex items-center justify-between">
                         <h2 class="font-semibold">Izin Menunggu</h2>
-                        <a href="{{ route('admin.pengajuan-izin.index', ['status' => 'menunggu']) }}" class="text-sm font-medium text-teal-700 hover:text-teal-900">Tinjau</a>
+                        <a href="{{ route('admin.pengajuan-izin.index', ['status' => 'menunggu']) }}" class="text-sm font-medium text-teal-700 hover:text-teal-900">{{ $bolehMeninjau ? 'Tinjau' : 'Lihat' }}</a>
                     </div>
                     <div class="mt-4 space-y-3">
                         @forelse ($pengajuanMenungguTerbaru as $pengajuan)

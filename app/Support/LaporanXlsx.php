@@ -17,7 +17,7 @@ class LaporanXlsx
             mkdir(dirname($path), 0755, true);
         }
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
         $zip->addFromString('[Content_Types].xml', self::contentTypes());
         $zip->addFromString('_rels/.rels', self::rels());
@@ -46,10 +46,12 @@ class LaporanXlsx
 
         $xmlRows .= self::row($rowNumber++, [''], [0], 6);
         $headerRow = $rowNumber;
-        $xmlRows .= self::row($rowNumber++, $header, array_fill(0, count($header), 1), 20);
+        $columnWidths = self::columnWidths(count($header));
+        $xmlRows .= self::row($rowNumber++, $header, array_fill(0, count($header), 1), 24);
 
         foreach ($rows as $rowIndex => $row) {
-            $xmlRows .= self::row($rowNumber++, array_values($row), array_fill(0, count($header), $rowIndex % 2 === 0 ? 4 : 5), 32);
+            $values = array_values($row);
+            $xmlRows .= self::row($rowNumber++, $values, array_fill(0, count($header), $rowIndex % 2 === 0 ? 4 : 5), self::rowHeight($values, $columnWidths));
         }
 
         $lastRow = max($headerRow, $rowNumber - 1);
@@ -90,10 +92,7 @@ class LaporanXlsx
 
     private static function cols(int $count): string
     {
-        $default = array_fill(0, max(1, $count), 18);
-        $widths = $count === 10
-            ? [13, 26, 20, 16, 12, 12, 20, 20, 24, 42]
-            : $default;
+        $widths = self::columnWidths($count);
 
         $xml = '<cols>';
         foreach ($widths as $index => $width) {
@@ -102,6 +101,34 @@ class LaporanXlsx
         }
 
         return $xml.'</cols>';
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private static function columnWidths(int $count): array
+    {
+        return $count === 10
+            ? [13, 28, 24, 16, 12, 12, 22, 24, 34, 72]
+            : array_fill(0, max(1, $count), 18);
+    }
+
+    /**
+     * @param  array<int, scalar|null>  $values
+     * @param  array<int, int>  $widths
+     */
+    private static function rowHeight(array $values, array $widths): int
+    {
+        $maxLines = 1;
+
+        foreach ($values as $index => $value) {
+            $width = $widths[$index] ?? 18;
+            $charactersPerLine = max(8, $width - 2);
+            $text = preg_replace('/\s+/', ' ', trim((string) $value)) ?? '';
+            $maxLines = max($maxLines, (int) ceil(max(1, strlen($text)) / $charactersPerLine));
+        }
+
+        return max(24, 16 + ($maxLines * 15));
     }
 
     private static function column(int $number): string

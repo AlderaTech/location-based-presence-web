@@ -5,10 +5,18 @@ namespace App\Support;
 class LaporanPdf
 {
     private const WIDTH = 842;
+
     private const HEIGHT = 595;
+
     private const MARGIN = 32;
-    private const HEADER_HEIGHT = 24;
-    private const ROW_HEIGHT = 22;
+
+    private const HEADER_HEIGHT = 30;
+
+    private const MIN_ROW_HEIGHT = 24;
+
+    private const LINE_HEIGHT = 9;
+
+    private const TABLE_BOTTOM = 50;
 
     /**
      * @param  array<int, array<int, scalar|null>>  $rows
@@ -20,15 +28,27 @@ class LaporanPdf
         $metadata = is_array($options['metadata'] ?? null) ? $options['metadata'] : [];
         $header = array_values(array_shift($rows) ?? ['Data']);
         $columns = self::columns(count($header));
-        $chunks = array_chunk($rows, 17);
+        $pages = self::paginate($rows, $columns, count($metadata));
 
-        if ($chunks === []) {
-            $chunks = [[]];
+        if ($pages === []) {
+            $pages = [[
+                'rows' => [],
+                'heights' => [],
+            ]];
         }
 
         $streams = [];
-        foreach ($chunks as $index => $chunk) {
-            $streams[] = self::page($judul, $metadata, $header, $columns, $chunk, $index + 1, count($chunks));
+        foreach ($pages as $index => $pageRows) {
+            $streams[] = self::page(
+                $judul,
+                $metadata,
+                $header,
+                $columns,
+                $pageRows['rows'],
+                $pageRows['heights'],
+                $index + 1,
+                count($pages)
+            );
         }
 
         return self::document($streams);
@@ -39,8 +59,9 @@ class LaporanPdf
      * @param  array<int, scalar|null>  $header
      * @param  array<int, array{x: int, width: int}>  $columns
      * @param  array<int, array<int, scalar|null>>  $rows
+     * @param  array<int, int>  $rowHeights
      */
-    private static function page(string $judul, array $metadata, array $header, array $columns, array $rows, int $page, int $totalPages): string
+    private static function page(string $judul, array $metadata, array $header, array $columns, array $rows, array $rowHeights, int $page, int $totalPages): string
     {
         $stream = '';
         $stream .= self::rect(0, 0, self::WIDTH, self::HEIGHT, [255, 255, 255]);
@@ -64,29 +85,33 @@ class LaporanPdf
 
         foreach ($columns as $index => $column) {
             $label = (string) ($header[$index] ?? '');
-            $stream .= self::text($column['x'] + 4, $headerY + 8, self::fit($label, $column['width'], 7), 7, 'F2', [255, 255, 255]);
+            $stream .= self::multilineText($column['x'] + 4, $headerY + self::HEADER_HEIGHT - 11, self::wrap($label, $column['width'], 7), 7, 'F2', [255, 255, 255]);
         }
 
         if ($rows === []) {
-            $y = $headerY - self::ROW_HEIGHT;
-            $stream .= self::rect(self::MARGIN, $y, $tableWidth, self::ROW_HEIGHT, [248, 250, 252]);
+            $y = $headerY - self::MIN_ROW_HEIGHT;
+            $stream .= self::rect(self::MARGIN, $y, $tableWidth, self::MIN_ROW_HEIGHT, [248, 250, 252]);
             $stream .= self::text(self::MARGIN + 8, $y + 8, 'Tidak ada data sesuai filter.', 8, 'F1', [100, 116, 139]);
             $stream .= self::line(self::MARGIN, $y, self::MARGIN + $tableWidth, $y, [226, 232, 240]);
         }
 
+        $currentY = $headerY;
         foreach ($rows as $rowIndex => $row) {
-            $y = $headerY - (($rowIndex + 1) * self::ROW_HEIGHT);
+            $height = $rowHeights[$rowIndex] ?? self::rowHeight($row, $columns);
+            $y = $currentY - $height;
             $fill = $rowIndex % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
-            $stream .= self::rect(self::MARGIN, $y, $tableWidth, self::ROW_HEIGHT, $fill);
+            $stream .= self::rect(self::MARGIN, $y, $tableWidth, $height, $fill);
             $stream .= self::line(self::MARGIN, $y, self::MARGIN + $tableWidth, $y, [226, 232, 240]);
 
             foreach ($columns as $index => $column) {
                 $value = (string) ($row[$index] ?? '');
-                $stream .= self::text($column['x'] + 4, $y + 8, self::fit($value, $column['width'], 7), 7, 'F1', [30, 41, 59]);
+                $stream .= self::multilineText($column['x'] + 4, $y + $height - 11, self::wrap($value, $column['width'], 7), 7, 'F1', [30, 41, 59]);
             }
+
+            $currentY = $y;
         }
 
-        $bottom = max(50, $headerY - ((count($rows) + 1) * self::ROW_HEIGHT));
+        $bottom = $rows === [] ? $headerY - self::MIN_ROW_HEIGHT : $currentY;
         $stream .= self::line(self::MARGIN, $headerY, self::MARGIN, $bottom, [203, 213, 225]);
         $stream .= self::line(self::MARGIN + $tableWidth, $headerY, self::MARGIN + $tableWidth, $bottom, [203, 213, 225]);
         $stream .= self::text(self::MARGIN, 24, 'Presensi Guru', 8, 'F2', [100, 116, 139]);
@@ -131,7 +156,7 @@ class LaporanPdf
         for ($i = 1; $i <= count($objects); $i++) {
             $pdf .= str_pad((string) $offsets[$i], 10, '0', STR_PAD_LEFT)." 00000 n \n";
         }
-        $pdf .= "trailer << /Size ".(count($objects) + 1)." /Root 1 0 R >>\n";
+        $pdf .= 'trailer << /Size '.(count($objects) + 1)." /Root 1 0 R >>\n";
         $pdf .= "startxref\n".$xref."\n%%EOF";
 
         return $pdf;
@@ -143,7 +168,7 @@ class LaporanPdf
     private static function columns(int $count): array
     {
         $widths = $count === 10
-            ? [60, 118, 78, 70, 50, 50, 86, 90, 70, 106]
+            ? [60, 112, 74, 62, 48, 48, 78, 82, 96, 118]
             : array_fill(0, max(1, $count), (int) floor((self::WIDTH - (self::MARGIN * 2)) / max(1, $count)));
 
         $x = self::MARGIN;
@@ -162,6 +187,20 @@ class LaporanPdf
     private static function text(int $x, int $y, string $text, int $size, string $font, array $rgb): string
     {
         return self::color($rgb, false).' BT /'.$font.' '.$size.' Tf 1 0 0 1 '.$x.' '.$y.' Tm ('.self::escape($text).") Tj ET\n";
+    }
+
+    /**
+     * @param  array<int, string>  $lines
+     * @param  array{0: int, 1: int, 2: int}  $rgb
+     */
+    private static function multilineText(int $x, int $y, array $lines, int $size, string $font, array $rgb): string
+    {
+        $stream = '';
+        foreach ($lines as $index => $line) {
+            $stream .= self::text($x, $y - ($index * self::LINE_HEIGHT), $line, $size, $font, $rgb);
+        }
+
+        return $stream;
     }
 
     /**
@@ -190,16 +229,115 @@ class LaporanPdf
         return sprintf('%.3F %.3F %.3F %s', $rgb[0] / 255, $rgb[1] / 255, $rgb[2] / 255, $operator);
     }
 
-    private static function fit(string $value, int $width, int $fontSize): string
+    /**
+     * @param  array<int, array<int, scalar|null>>  $rows
+     * @param  array<int, array{x: int, width: int}>  $columns
+     * @return array<int, array{rows: array<int, array<int, scalar|null>>, heights: array<int, int>}>
+     */
+    private static function paginate(array $rows, array $columns, int $metadataCount): array
     {
-        $value = preg_replace('/\s+/', ' ', trim($value)) ?? '';
-        $limit = max(4, (int) floor($width / ($fontSize * 0.52)));
+        $headerY = self::tableHeaderY($metadataCount);
+        $availableHeight = $headerY - self::TABLE_BOTTOM;
+        $pages = [];
+        $pageRows = [];
+        $pageHeights = [];
+        $usedHeight = 0;
 
-        if (strlen($value) <= $limit) {
-            return $value;
+        foreach ($rows as $row) {
+            $height = self::rowHeight($row, $columns);
+
+            if ($pageRows !== [] && $usedHeight + $height > $availableHeight) {
+                $pages[] = [
+                    'rows' => $pageRows,
+                    'heights' => $pageHeights,
+                ];
+                $pageRows = [];
+                $pageHeights = [];
+                $usedHeight = 0;
+            }
+
+            $pageRows[] = $row;
+            $pageHeights[] = $height;
+            $usedHeight += $height;
         }
 
-        return substr($value, 0, max(1, $limit - 3)).'...';
+        if ($pageRows !== []) {
+            $pages[] = [
+                'rows' => $pageRows,
+                'heights' => $pageHeights,
+            ];
+        }
+
+        return $pages;
+    }
+
+    private static function tableHeaderY(int $metadataCount): int
+    {
+        $tableTop = 518 - max(1, (int) ceil($metadataCount / 2)) * 14 - 18;
+
+        return $tableTop - self::HEADER_HEIGHT;
+    }
+
+    /**
+     * @param  array<int, scalar|null>  $row
+     * @param  array<int, array{x: int, width: int}>  $columns
+     */
+    private static function rowHeight(array $row, array $columns): int
+    {
+        $maxLines = 1;
+
+        foreach ($columns as $index => $column) {
+            $maxLines = max($maxLines, count(self::wrap((string) ($row[$index] ?? ''), $column['width'], 7)));
+        }
+
+        return max(self::MIN_ROW_HEIGHT, 14 + ($maxLines * self::LINE_HEIGHT));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function wrap(string $value, int $width, int $fontSize): array
+    {
+        $value = preg_replace('/\s+/', ' ', trim($value)) ?? '';
+
+        if ($value === '') {
+            return [''];
+        }
+
+        $limit = max(4, (int) floor(($width - 8) / ($fontSize * 0.52)));
+        $lines = [];
+        $line = '';
+
+        foreach (explode(' ', $value) as $word) {
+            if (strlen($word) > $limit) {
+                if ($line !== '') {
+                    $lines[] = $line;
+                    $line = '';
+                }
+
+                foreach (str_split($word, $limit) as $part) {
+                    $lines[] = $part;
+                }
+
+                continue;
+            }
+
+            $candidate = $line === '' ? $word : $line.' '.$word;
+            if (strlen($candidate) <= $limit) {
+                $line = $candidate;
+
+                continue;
+            }
+
+            $lines[] = $line;
+            $line = $word;
+        }
+
+        if ($line !== '') {
+            $lines[] = $line;
+        }
+
+        return $lines !== [] ? $lines : [''];
     }
 
     private static function escape(string $value): string

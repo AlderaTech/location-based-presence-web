@@ -32,4 +32,21 @@ class ManajemenFilterSortTest extends TestCase
             $this->actingAs($admin)->get($url)->assertOk();
         }
     }
+
+    public function test_form_lokasi_sekolah_memakai_peta_untuk_memilih_koordinat(): void
+    {
+        $this->seed(PresensiDemoSeeder::class);
+
+        $admin = Pengguna::query()->where('email', 'admin@presensi.test')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get('/admin/lokasi-sekolah/create')
+            ->assertOk()
+            ->assertSee('data-location-map', false)
+            ->assertSee('data-location-map-canvas', false)
+            ->assertSee('id="latitude" type="hidden" name="latitude"', false)
+            ->assertSee('id="longitude" type="hidden" name="longitude"', false)
+            ->assertDontSee('<label class="text-sm">Latitude', false)
+            ->assertDontSee('<label class="text-sm">Longitude', false);
+    }
 }

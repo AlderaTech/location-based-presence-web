@@ -86,13 +86,13 @@
                     <div>
                         <p class="text-sm font-medium text-teal-700">Akses Admin</p>
                         <h1 class="mt-2 text-2xl font-semibold">Masuk ke dasbor</h1>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Gunakan akun admin, tata usaha, atau kepala sekolah yang sudah terdaftar.</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-500">Gunakan akun admin atau kepala sekolah yang sudah terdaftar.</p>
                     </div>
 
                     <div class="mt-6 space-y-4">
                         <label class="block">
                             <span class="text-sm font-medium text-slate-700">Email</span>
-                            <input name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10">
+                            <input name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus placeholder="admin@presensi.test" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10">
                             @error('email')
                                 <span class="mt-1 block text-xs text-red-700">{{ $message }}</span>
                             @enderror
@@ -100,7 +100,7 @@
 
                         <label class="block">
                             <span class="text-sm font-medium text-slate-700">Kata Sandi</span>
-                            <input name="kata_sandi" type="password" autocomplete="current-password" required class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10">
+                            <input name="kata_sandi" type="password" autocomplete="current-password" required placeholder="Masukkan kata sandi" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10">
                             @error('kata_sandi')
                                 <span class="mt-1 block text-xs text-red-700">{{ $message }}</span>
                             @enderror

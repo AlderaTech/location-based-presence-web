@@ -16,11 +16,12 @@
             'cuti' => 'bg-indigo-50 text-indigo-800 ring-indigo-200',
             'alpha' => 'bg-rose-50 text-rose-800 ring-rose-200',
         ];
+        $bolehKoreksi = auth()->user()->peran === 'admin';
     @endphp
 
     <div class="mb-5">
         <h1 class="text-2xl font-semibold">Data Presensi</h1>
-        <p class="text-sm text-slate-500">Pantau presensi masuk/pulang, lokasi, status, deteksi lokasi palsu, dan koreksi manual.</p>
+        <p class="text-sm text-slate-500">{{ $bolehKoreksi ? 'Pantau presensi masuk/pulang, lokasi, status, deteksi lokasi palsu, dan koreksi manual.' : 'Pantau presensi masuk/pulang, lokasi, status, dan deteksi lokasi palsu.' }}</p>
     </div>
 
     <form class="mb-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 md:grid-cols-4 xl:grid-cols-8">
@@ -55,8 +56,8 @@
             <option value="0" @selected(request('lokasi_palsu') === '0')>Lokasi valid</option>
         </select>
         <div class="grid grid-cols-2 gap-3 md:col-span-2">
-            <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-            <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+            <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" placeholder="Tanggal mulai" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+            <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" placeholder="Tanggal selesai" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         </div>
         <button class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Terapkan</button>
         <a href="{{ route('admin.presensi.index') }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Reset</a>
@@ -73,7 +74,9 @@
                     <th class="px-4 py-3"><x-admin.sort-link kolom="jam_pulang_pada" label="Pulang" /></th>
                     <th class="px-4 py-3"><x-admin.sort-link kolom="jadwal" label="Jadwal" /></th>
                     <th class="px-4 py-3"><x-admin.sort-link kolom="lokasi" label="Lokasi" /></th>
-                    <th class="px-4 py-3 text-right">Aksi</th>
+                    @if ($bolehKoreksi)
+                        <th class="px-4 py-3 text-right">Aksi</th>
+                    @endif
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -96,10 +99,12 @@
                         <td class="px-4 py-3 whitespace-nowrap">{{ $item->jam_pulang_pada?->format('H:i') ?? '-' }}<div class="text-xs text-slate-500">{{ $item->jarak_pulang_meter !== null ? $item->jarak_pulang_meter.' m' : '' }}</div></td>
                         <td class="px-4 py-3">{{ $item->jadwalKerja?->nama ?: '-' }}</td>
                         <td class="px-4 py-3">{{ $item->lokasiSekolah?->nama ?: '-' }}</td>
-                        <td class="px-4 py-3 text-right"><a href="{{ route('admin.presensi.edit', $item) }}" class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">Koreksi</a></td>
+                        @if ($bolehKoreksi)
+                            <td class="px-4 py-3 text-right"><a href="{{ route('admin.presensi.edit', $item) }}" class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">Koreksi</a></td>
+                        @endif
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Belum ada data presensi sesuai filter.</td></tr>
+                    <tr><td colspan="{{ $bolehKoreksi ? 8 : 7 }}" class="px-4 py-8 text-center text-slate-500">Belum ada data presensi sesuai filter.</td></tr>
                 @endforelse
             </tbody>
         </table>

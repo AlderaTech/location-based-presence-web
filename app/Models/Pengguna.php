@@ -15,6 +15,7 @@ class Pengguna extends Authenticatable
     use HasFactory, Notifiable;
 
     public const CREATED_AT = 'dibuat_pada';
+
     public const UPDATED_AT = 'diubah_pada';
 
     protected $table = 'pengguna';
@@ -66,7 +67,7 @@ class Pengguna extends Authenticatable
 
     public function adalahAdmin(): bool
     {
-        return in_array($this->peran, ['admin', 'tata_usaha', 'kepala_sekolah'], true);
+        return in_array($this->peran, ['admin', 'kepala_sekolah'], true);
     }
 
     public function adalahGuru(): bool

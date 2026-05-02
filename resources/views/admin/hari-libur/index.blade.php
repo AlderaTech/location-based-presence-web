@@ -14,8 +14,8 @@
             <option value="nasional" @selected(request('jenis') === 'nasional')>Nasional</option>
             <option value="sekolah" @selected(request('jenis') === 'sekolah')>Sekolah</option>
         </select>
-        <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-        <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" placeholder="Tanggal mulai" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" placeholder="Tanggal selesai" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <button class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Terapkan</button>
         <a href="{{ route('admin.hari-libur.index') }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Reset</a>
     </form>
