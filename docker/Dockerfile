@@ -33,7 +33,8 @@ RUN composer install \
     --prefer-dist \
     --no-interaction \
     --no-progress \
-    --no-scripts
+    --no-scripts \
+    --ignore-platform-reqs
 
 COPY . .
 RUN composer dump-autoload --no-dev --optimize
