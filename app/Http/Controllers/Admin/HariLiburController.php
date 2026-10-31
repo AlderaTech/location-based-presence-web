@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\HariLibur;
-use App\Support\SortirAdmin;
+use App\Support\AdminSortHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,7 +20,7 @@ class HariLiburController extends Controller
             ->when($request->query('tanggal_mulai'), fn ($query, $tanggal) => $query->whereDate('tanggal', '>=', $tanggal))
             ->when($request->query('tanggal_selesai'), fn ($query, $tanggal) => $query->whereDate('tanggal', '<=', $tanggal));
 
-        SortirAdmin::terapkan($query, $request, [
+        AdminSortHelper::terapkan($query, $request, [
             'tanggal' => 'hari_libur.tanggal',
             'nama' => 'hari_libur.nama',
             'jenis' => 'hari_libur.jenis',

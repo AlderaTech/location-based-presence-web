@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AutentikasiTokenMobile
+class AuthenticateMobileTokenMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -19,7 +19,7 @@ class AutentikasiTokenMobile
         }
 
         $token = TokenApi::query()
-            ->with('pengguna.guru.jadwalKerjaBawaan')
+            ->with(['pengguna.murid.kelas', 'pengguna.guru'])
             ->where('hash_token', hash('sha256', $tokenPolos))
             ->first();
 

@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Middleware\AutentikasiTokenMobile;
-use App\Http\Middleware\PastikanPenggunaAdmin;
-use App\Http\Middleware\PastikanPeran;
+use App\Http\Middleware\AuthenticateMobileTokenMiddleware;
+use App\Http\Middleware\EnsureAdminUserMiddleware;
+use App\Http\Middleware\EnsureRoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,9 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('admin.masuk'));
 
         $middleware->alias([
-            'admin' => PastikanPenggunaAdmin::class,
-            'peran' => PastikanPeran::class,
-            'mobile.auth' => AutentikasiTokenMobile::class,
+            'admin' => EnsureAdminUserMiddleware::class,
+            'peran' => EnsureRoleMiddleware::class,
+            'mobile.auth' => AuthenticateMobileTokenMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

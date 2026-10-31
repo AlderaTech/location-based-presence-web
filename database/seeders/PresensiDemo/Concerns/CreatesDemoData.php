@@ -11,7 +11,7 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\PresensiDemo\PresensiDemoConfig;
 use Illuminate\Support\Facades\Hash;
 
-trait MembuatDataDemo
+trait CreatesDemoData
 {
     protected function pengguna(
         string $email,

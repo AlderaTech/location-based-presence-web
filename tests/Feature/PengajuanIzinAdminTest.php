@@ -20,9 +20,8 @@ class PengajuanIzinAdminTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/pengajuan-izin')
             ->assertOk()
-            ->assertSee('Kelola Pengajuan Guru')
             ->assertSee('Total Pengajuan')
-            ->assertSee('Setujui Pengajuan');
+            ->assertSee('Setujui Izin / Sakit');
     }
 
     public function test_halaman_pengajuan_izin_bisa_difilter_berdasarkan_pencarian(): void
@@ -32,8 +31,20 @@ class PengajuanIzinAdminTest extends TestCase
         $admin = Pengguna::query()->where('email', 'admin@presensi.test')->firstOrFail();
 
         $this->actingAs($admin)
-            ->get('/admin/pengajuan-izin?q=Guru+Demo')
+            ->get('/admin/pengajuan-izin?q=Dian')
             ->assertOk()
-            ->assertSee('Guru Demo');
+            ->assertSee('Dian Sastro');
+    }
+
+    public function test_halaman_pengajuan_izin_dengan_sorting_dan_filter_tidak_menyebabkan_error_group_by(): void
+    {
+        $this->seed(PresensiDemoSeeder::class);
+
+        $admin = Pengguna::query()->where('email', 'admin@presensi.test')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get('/admin/pengajuan-izin?status=menunggu&sort=dibuat_pada&direction=desc')
+            ->assertOk()
+            ->assertSee('Setujui Izin / Sakit');
     }
 }

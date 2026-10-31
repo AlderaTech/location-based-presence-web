@@ -8,27 +8,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Presensi extends Model
 {
     public const CREATED_AT = 'dibuat_pada';
+
     public const UPDATED_AT = 'diubah_pada';
 
     protected $table = 'presensi';
 
     protected $fillable = [
         'id_pengguna',
-        'id_guru',
+        'id_murid',
+        'id_jadwal_pelajaran',
+        'id_sesi_presensi',
         'id_lokasi_sekolah',
-        'id_jadwal_kerja',
         'tanggal_presensi',
-        'jam_masuk_pada',
-        'jam_pulang_pada',
-        'latitude_masuk',
-        'longitude_masuk',
-        'akurasi_masuk',
-        'jarak_masuk_meter',
-        'latitude_pulang',
-        'longitude_pulang',
-        'akurasi_pulang',
-        'jarak_pulang_meter',
+        'waktu_presensi',
         'status',
+        'metode',
+        'latitude',
+        'longitude',
+        'akurasi',
+        'jarak_meter',
         'terdeteksi_lokasi_palsu',
         'id_perangkat',
         'catatan',
@@ -40,8 +38,7 @@ class Presensi extends Model
     {
         return [
             'tanggal_presensi' => 'date',
-            'jam_masuk_pada' => 'datetime',
-            'jam_pulang_pada' => 'datetime',
+            'waktu_presensi' => 'datetime',
             'terdeteksi_lokasi_palsu' => 'boolean',
         ];
     }
@@ -51,9 +48,19 @@ class Presensi extends Model
         return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
-    public function guru(): BelongsTo
+    public function murid(): BelongsTo
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Murid::class, 'id_murid');
+    }
+
+    public function jadwalPelajaran(): BelongsTo
+    {
+        return $this->belongsTo(JadwalPelajaran::class, 'id_jadwal_pelajaran');
+    }
+
+    public function sesiPresensi(): BelongsTo
+    {
+        return $this->belongsTo(SesiPresensi::class, 'id_sesi_presensi');
     }
 
     public function lokasiSekolah(): BelongsTo
@@ -61,8 +68,8 @@ class Presensi extends Model
         return $this->belongsTo(LokasiSekolah::class, 'id_lokasi_sekolah');
     }
 
-    public function jadwalKerja(): BelongsTo
+    public function pengoreksi(): BelongsTo
     {
-        return $this->belongsTo(JadwalKerja::class, 'id_jadwal_kerja');
+        return $this->belongsTo(Pengguna::class, 'id_pengoreksi');
     }
 }

@@ -4,7 +4,10 @@
             <h1 class="text-2xl font-semibold">Lokasi Sekolah</h1>
             <p class="text-sm text-slate-500">Atur titik koordinat sekolah dan radius validasi presensi.</p>
         </div>
-        <a href="{{ route('admin.lokasi-sekolah.create') }}" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Tambah Lokasi</a>
+        <a href="{{ route('admin.lokasi-sekolah.create') }}" class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-teal-700">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            Tambah Lokasi
+        </a>
     </div>
 
     <form class="mb-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 md:grid-cols-[1fr_170px_150px_150px_auto_auto]">
@@ -38,17 +41,15 @@
                         <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ $lokasi->latitude }}, {{ $lokasi->longitude }}</td>
                         <td class="px-4 py-3">{{ $lokasi->radius_meter }} m</td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $lokasi->aktif ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-200' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200' }}">
-                                {{ $lokasi->aktif ? 'Aktif' : 'Nonaktif' }}
-                            </span>
+                            <x-badge-aktif :aktif="$lokasi->aktif" />
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex justify-end gap-2">
-                                <a href="{{ route('admin.lokasi-sekolah.edit', $lokasi) }}" class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">Edit</a>
+                            <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                <a href="{{ route('admin.lokasi-sekolah.edit', $lokasi) }}" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50">Edit</a>
                                 <form method="post" action="{{ route('admin.lokasi-sekolah.destroy', $lokasi) }}" data-confirm data-confirm-title="Nonaktifkan lokasi?" data-confirm-text="Lokasi ini tidak lagi dipakai untuk validasi presensi." data-confirm-button="Nonaktifkan" data-confirm-variant="danger">
                                     @csrf
                                     @method('delete')
-                                    <button class="rounded-md border border-red-300 px-3 py-1.5 font-medium text-red-700 hover:bg-red-50">Nonaktifkan</button>
+                                    <button class="rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-semibold text-red-600 shadow-xs transition hover:bg-red-50">Nonaktifkan</button>
                                 </form>
                             </div>
                         </td>

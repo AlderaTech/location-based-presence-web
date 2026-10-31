@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\LogAuditPresensi;
-use Database\Seeders\PresensiDemo\AuditLokasiPalsuDemoSeeder;
 use Database\Seeders\PresensiDemo\HariLiburDemoSeeder;
-use Database\Seeders\PresensiDemo\JadwalKerjaDemoSeeder;
+use Database\Seeders\PresensiDemo\JadwalPelajaranDemoSeeder;
 use Database\Seeders\PresensiDemo\LokasiSekolahDemoSeeder;
 use Database\Seeders\PresensiDemo\PengajuanIzinDemoSeeder;
 use Database\Seeders\PresensiDemo\PenggunaDemoSeeder;
@@ -18,15 +17,20 @@ class PresensiDemoSeeder extends Seeder
     {
         LogAuditPresensi::query()->where('aksi', 'like', 'seed_%')->delete();
 
-        $jadwalKerja = app(JadwalKerjaDemoSeeder::class)->seed();
         $lokasiSekolah = app(LokasiSekolahDemoSeeder::class)->seed();
-        $penggunaAdmin = app(PenggunaDemoSeeder::class)->seedPenggunaAdmin();
-        $guru = app(PenggunaDemoSeeder::class)->seedGuru($jadwalKerja);
+        $admin = app(PenggunaDemoSeeder::class)->seedAdmin();
+        $guru = app(PenggunaDemoSeeder::class)->seedGuru();
+        $kelas = app(PenggunaDemoSeeder::class)->seedKelas();
+        $mapel = app(PenggunaDemoSeeder::class)->seedMataPelajaran();
+        $murid = app(PenggunaDemoSeeder::class)->seedMurid($kelas);
 
-        app(PenggunaDemoSeeder::class)->seedPerangkat($guru);
         app(HariLiburDemoSeeder::class)->seed();
-        app(RiwayatPresensiDemoSeeder::class)->seed($guru, $penggunaAdmin['admin'], $lokasiSekolah['utama']);
-        app(PengajuanIzinDemoSeeder::class)->seed($guru, $penggunaAdmin['admin']);
-        app(AuditLokasiPalsuDemoSeeder::class)->seed($guru);
+
+        $jadwal = app(JadwalPelajaranDemoSeeder::class)->seed($guru, $kelas, $mapel, $lokasiSekolah['utama'] ?? null);
+
+        if (isset($lokasiSekolah['utama'])) {
+            app(RiwayatPresensiDemoSeeder::class)->seed($murid, $jadwal, $admin['admin'], $lokasiSekolah['utama']);
+            app(PengajuanIzinDemoSeeder::class)->seed($murid, $jadwal, $admin['admin'], $guru['guru']->pengguna);
+        }
     }
 }

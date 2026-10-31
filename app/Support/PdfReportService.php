@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-class LaporanPdf
+class PdfReportService
 {
     private const WIDTH = 842;
 

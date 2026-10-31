@@ -13,7 +13,7 @@ class AuthController extends Controller
 {
     public function showLogin(): View|RedirectResponse
     {
-        if (Auth::check() && Auth::user()->adalahAdmin()) {
+        if (Auth::check() && (Auth::user()->adalahAdmin() || Auth::user()->adalahGuru())) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -33,9 +33,10 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        if (! Auth::user()->adalahAdmin() || ! Auth::user()->aktif()) {
+        $user = Auth::user();
+        if ((! $user->adalahAdmin() && ! $user->adalahGuru()) || ! $user->aktif()) {
             Auth::logout();
-            throw ValidationException::withMessages(['email' => 'Akun ini tidak memiliki akses admin.']);
+            throw ValidationException::withMessages(['email' => 'Akun ini tidak memiliki akses ke portal web.']);
         }
 
         return redirect()->intended(route('admin.dashboard'));

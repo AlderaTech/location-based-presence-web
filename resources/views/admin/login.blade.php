@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Masuk Admin Presensi</title>
+    <title>Masuk Portal Presensi</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <script>
@@ -24,17 +24,17 @@
 
             <div class="relative">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
+                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Murid" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
                     <div>
-                        <p class="text-lg font-semibold">Presensi Guru</p>
-                        <p class="text-sm text-slate-300">Dasbor pengelola sekolah</p>
+                        <p class="text-lg font-semibold">Presensi Murid</p>
+                        <p class="text-sm text-slate-300">Portal Admin & Guru</p>
                     </div>
                 </div>
             </div>
 
             <div class="relative max-w-xl">
                 <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-200">Pantauan Hari Ini</p>
-                <h1 class="mt-4 max-w-lg text-4xl font-semibold leading-tight">Kontrol kehadiran guru dalam satu ruang kerja yang rapi.</h1>
+                <h1 class="mt-4 max-w-lg text-4xl font-semibold leading-tight">Kontrol presensi siswa berbasis QR & geolokasi per mata pelajaran.</h1>
                 <div class="mt-8 grid grid-cols-3 gap-3">
                     <div class="rounded-md border border-white/10 bg-white/10 p-4 backdrop-blur">
                         <p class="text-3xl font-semibold">86%</p>
@@ -74,19 +74,19 @@
         <section class="auth-admin-panel flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
             <div class="w-full max-w-md">
                 <div class="auth-admin-brand mb-6 flex items-center gap-3 lg:hidden">
-                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Guru" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
+                    <img src="{{ asset('assets/brand/logo.png') }}" alt="Logo Presensi Murid" class="h-11 w-11 rounded-md bg-white object-contain p-1 shadow-sm">
                     <div>
-                        <p class="text-lg font-semibold">Presensi Guru</p>
-                        <p class="text-sm text-slate-500">Dasbor pengelola sekolah</p>
+                        <p class="text-lg font-semibold">Presensi Murid</p>
+                        <p class="text-sm text-slate-500">Portal Admin & Guru</p>
                     </div>
                 </div>
 
                 <form method="post" action="{{ route('admin.masuk.store') }}" class="auth-admin-form rounded-md border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-7">
                     @csrf
                     <div>
-                        <p class="text-sm font-medium text-teal-700">Akses Admin</p>
-                        <h1 class="mt-2 text-2xl font-semibold">Masuk ke dasbor</h1>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Gunakan akun admin atau kepala sekolah yang sudah terdaftar.</p>
+                        <p class="text-sm font-medium text-teal-700">Akses Portal</p>
+                        <h1 class="mt-2 text-2xl font-semibold">Masuk ke Dasbor</h1>
+                        <p class="mt-2 text-sm leading-6 text-slate-500">Gunakan akun admin atau guru yang sudah terdaftar.</p>
                     </div>
 
                     <div class="mt-6 space-y-4">
@@ -119,7 +119,7 @@
                     </button>
                 </form>
 
-                <p class="mt-5 text-center text-xs text-slate-500">Sistem Presensi Guru</p>
+                <p class="mt-5 text-center text-xs text-slate-500">Sistem Presensi Murid</p>
             </div>
         </section>
     </main>

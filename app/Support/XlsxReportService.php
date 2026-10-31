@@ -4,7 +4,7 @@ namespace App\Support;
 
 use ZipArchive;
 
-class LaporanXlsx
+class XlsxReportService
 {
     /**
      * @param  array<int, array<int, scalar|null>>  $rows

@@ -25,10 +25,11 @@ class LaporanExportTest extends TestCase
         $this->assertStringStartsWith('%PDF-1.4', $pdf->baseResponse->getContent());
         $this->assertStringContainsString('/MediaBox [0 0 842 595]', $pdf->baseResponse->getContent());
         $this->assertStringNotContainsString('...', $pdf->baseResponse->getContent());
-        $this->assertStringContainsString('Pulang', $pdf->baseResponse->getContent());
-        $this->assertStringContainsString('Koreksi demo karena', $pdf->baseResponse->getContent());
-        $this->assertStringContainsString('membuka', $pdf->baseResponse->getContent());
-        $this->assertStringContainsString('GPS', $pdf->baseResponse->getContent());
+        $this->assertStringContainsString('Rekap Presensi Murid', $pdf->baseResponse->getContent());
+        $this->assertStringContainsString('Ahmad Fauzi', $pdf->baseResponse->getContent());
+        $this->assertStringContainsString('Matematika', $pdf->baseResponse->getContent());
+        $this->assertStringContainsString('Scan QR & GPS', $pdf->baseResponse->getContent());
+        $this->assertStringNotContainsString('qr_lokasi', $pdf->baseResponse->getContent());
 
         $xlsx = $this->actingAs($admin)
             ->get('/admin/laporan/ekspor/xlsx?status=hadir&sort=nama&direction=asc');
@@ -46,10 +47,12 @@ class LaporanExportTest extends TestCase
         $this->assertIsString($sheet);
         $this->assertStringContainsString('<autoFilter', $sheet);
         $this->assertStringContainsString('state="frozen"', $sheet);
-        $this->assertStringContainsString('Rekap Presensi Guru', $sheet);
-        $this->assertStringContainsString('NIP atau Nomor Pegawai', $sheet);
-        $this->assertStringContainsString('Pulang', $sheet);
-        $this->assertStringContainsString('Koreksi demo karena aplikasi guru sempat tidak bisa membuka GPS.', $sheet);
+        $this->assertStringContainsString('Rekap Presensi Murid', $sheet);
+        $this->assertStringContainsString('NIS', $sheet);
+        $this->assertStringContainsString('Nama Murid', $sheet);
+        $this->assertStringContainsString('Mata Pelajaran', $sheet);
+        $this->assertStringContainsString('Scan QR &amp; GPS', $sheet);
+        $this->assertStringNotContainsString('qr_lokasi', $sheet);
         $this->assertStringNotContainsString('...', $sheet);
     }
 }

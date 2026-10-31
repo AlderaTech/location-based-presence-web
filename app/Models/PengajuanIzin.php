@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PengajuanIzin extends Model
 {
     public const CREATED_AT = 'dibuat_pada';
+
     public const UPDATED_AT = 'diubah_pada';
 
     protected $table = 'pengajuan_izin';
 
     protected $fillable = [
         'id_pengguna',
-        'id_guru',
+        'id_murid',
+        'id_jadwal_pelajaran',
         'jenis',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -40,9 +42,14 @@ class PengajuanIzin extends Model
         return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
-    public function guru(): BelongsTo
+    public function murid(): BelongsTo
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Murid::class, 'id_murid');
+    }
+
+    public function jadwalPelajaran(): BelongsTo
+    {
+        return $this->belongsTo(JadwalPelajaran::class, 'id_jadwal_pelajaran');
     }
 
     public function peninjau(): BelongsTo

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
-class SortirAdmin
+class AdminSortHelper
 {
     /**
      * @param  array<string, Closure|non-empty-string>  $kolom

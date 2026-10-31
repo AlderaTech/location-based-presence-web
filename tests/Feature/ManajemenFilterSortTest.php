@@ -18,12 +18,15 @@ class ManajemenFilterSortTest extends TestCase
         $admin = Pengguna::query()->where('email', 'admin@presensi.test')->firstOrFail();
 
         $halaman = [
-            '/admin/guru?q=Guru&status=aktif&id_jadwal_kerja=1&sort=nama&direction=asc',
-            '/admin/presensi?q=Guru&status=hadir&id_jadwal_kerja=1&id_lokasi_sekolah=1&lokasi_palsu=0&sort=tanggal_presensi&direction=desc',
-            '/admin/laporan?q=Guru&status=hadir&id_jadwal_kerja=1&id_lokasi_sekolah=1&lokasi_palsu=0&sort=nama&direction=asc',
-            '/admin/pengajuan-izin?q=Guru&status=menunggu&jenis=izin&sort=tanggal_mulai&direction=asc',
+            '/admin/guru?q=Guru&status=aktif&sort=nama&direction=asc',
+            '/admin/murid?q=Ahmad&status=aktif&sort=nama&direction=asc',
+            '/admin/kelas?q=MIPA&sort=nama_kelas&direction=asc',
+            '/admin/mata-pelajaran?q=Matematika&sort=nama_mapel&direction=asc',
+            '/admin/jadwal-pelajaran?sort=jam_mulai&direction=asc',
+            '/admin/presensi?q=Ahmad&status=hadir&sort=tanggal_presensi&direction=desc',
+            '/admin/laporan?q=Ahmad&status=hadir&sort=nama&direction=asc',
+            '/admin/pengajuan-izin?q=Dian&status=menunggu&jenis=sakit',
             '/admin/lokasi-sekolah?q=Sekolah&aktif=1&radius_min=10&radius_max=1000&sort=radius&direction=asc',
-            '/admin/jadwal-kerja?q=Reguler&aktif=1&sort=jam_masuk&direction=asc',
             '/admin/hari-libur?jenis=sekolah&sort=tanggal&direction=desc',
             '/admin/pengguna-admin?peran=admin&status=aktif&sort=nama&direction=asc',
         ];

@@ -53,9 +53,9 @@ Role `tata_usaha` sudah digabungkan ke `admin`. Migration `2026_05_02_000001_gab
 
 ```text
 app/Http/Controllers/Admin      Controller dashboard dan halaman admin
-app/Http/Controllers/Api/Mobile API untuk aplikasi mobile guru
+app/Http/Controllers/Api/Mobile API untuk aplikasi mobile murid
 app/Http/Middleware             Middleware akses admin, role, dan token mobile
-app/Services/LayananPresensi    Logika presensi dan validasi lokasi
+app/Services/PresensiService    Logika presensi dan validasi lokasi
 app/Support                     Formatter, export PDF/XLSX, sorting, session handler
 database/migrations             Skema database
 database/seeders                Seeder demo

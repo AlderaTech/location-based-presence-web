@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Support\SesiDatabaseHandler;
+use App\Support\DatabaseSessionHandler;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         Session::extend('database', function ($app) {
             $config = $app->make('config');
 
-            return new SesiDatabaseHandler(
+            return new DatabaseSessionHandler(
                 $app->make('db')->connection($config->get('session.connection')),
                 $config->get('session.table'),
                 $config->get('session.lifetime'),

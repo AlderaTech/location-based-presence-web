@@ -3,9 +3,9 @@
 namespace App\Support;
 
 use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Session\DatabaseSessionHandler;
+use Illuminate\Session\DatabaseSessionHandler as BaseDatabaseSessionHandler;
 
-class SesiDatabaseHandler extends DatabaseSessionHandler
+class DatabaseSessionHandler extends BaseDatabaseSessionHandler
 {
     protected function addUserInformation(&$payload)
     {

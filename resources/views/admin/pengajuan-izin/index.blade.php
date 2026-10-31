@@ -1,248 +1,219 @@
-<x-admin.layout title="Persetujuan Izin">
+<x-admin.layout title="Persetujuan Izin & Sakit Murid">
     @php
         $labelStatus = ['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'];
-        $labelJenis = ['izin' => 'Izin', 'sakit' => 'Sakit', 'cuti' => 'Cuti'];
-        $statusMeta = [
-            'menunggu' => ['chip' => 'bg-amber-50 text-amber-800 ring-amber-200', 'dot' => 'bg-amber-500', 'icon' => 'clock-3'],
-            'disetujui' => ['chip' => 'bg-teal-50 text-teal-800 ring-teal-200', 'dot' => 'bg-teal-600', 'icon' => 'circle-check-big'],
-            'ditolak' => ['chip' => 'bg-rose-50 text-rose-800 ring-rose-200', 'dot' => 'bg-rose-600', 'icon' => 'circle-x'],
-        ];
-        $jenisMeta = [
-            'izin' => ['chip' => 'bg-sky-50 text-sky-800 ring-sky-200', 'icon' => 'file-text'],
-            'sakit' => ['chip' => 'bg-violet-50 text-violet-800 ring-violet-200', 'icon' => 'stethoscope'],
-            'cuti' => ['chip' => 'bg-indigo-50 text-indigo-800 ring-indigo-200', 'icon' => 'calendar-range'],
-        ];
+        $labelJenis = ['izin' => 'Izin', 'sakit' => 'Sakit'];
         $statusAktif = request('status');
-        $jenisAktif = request('jenis');
         $queryFilter = request()->except(['page']);
-        $bolehMeninjau = auth()->user()->peran === 'admin';
+        $bolehMeninjau = in_array(auth()->user()->peran, ['admin', 'guru'], true);
     @endphp
 
     <div class="space-y-6">
-        <section class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm shadow-slate-900/5">
+        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="grid lg:grid-cols-[minmax(0,1fr)_340px]">
                 <div class="p-5 sm:p-6">
-                    <p class="text-sm font-medium text-teal-700">{{ $bolehMeninjau ? 'Persetujuan Izin' : 'Monitoring Izin' }}</p>
+                    <p class="text-sm font-bold text-teal-700">Verifikasi Izin & Sakit Murid</p>
                     <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ $bolehMeninjau ? 'Kelola Pengajuan Guru' : 'Pantau Pengajuan Guru' }}</h1>
-                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{{ $bolehMeninjau ? 'Tinjau izin, sakit, dan cuti dengan konteks tanggal, dokumen pendukung, status, dan alasan penolakan.' : 'Pantau izin, sakit, dan cuti dengan konteks tanggal, dokumen pendukung, status, dan alasan penolakan.' }}</p>
+                            <h1 class="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900">Pengajuan Izin & Sakit Siswa</h1>
+                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Periksa surat keterangan dokter atau surat izin orang tua yang diunggah siswa. Setujui untuk memperbarui status presensi menjadi Izin/Sakit.</p>
                         </div>
-                        <a href="{{ route('admin.laporan.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">
-                            <i data-lucide="chart-column-big"></i>
-                            Laporan
+                        <a href="{{ route('admin.laporan.index') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800">
+                            <i data-lucide="chart-column-big" class="h-4 w-4"></i>
+                            Rekap Presensi
                         </a>
                     </div>
 
                     <div class="mt-6 grid gap-3 sm:grid-cols-3">
                         @foreach (['menunggu', 'disetujui', 'ditolak'] as $status)
-                            <a href="{{ route('admin.pengajuan-izin.index', array_merge($queryFilter, ['status' => $status])) }}" class="rounded-md border p-4 transition {{ $statusAktif === $status ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-300 hover:bg-white' }}">
+                            <a href="{{ route('admin.pengajuan-izin.index', array_merge($queryFilter, ['status' => $status])) }}" class="rounded-xl border p-4 transition {{ $statusAktif === $status ? 'border-teal-600 bg-teal-50/50 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-300 hover:bg-white' }}">
                                 <div class="flex items-center justify-between gap-3">
-                                    <span class="text-sm {{ $statusAktif === $status ? 'text-slate-300' : 'text-slate-500' }}">{{ $labelStatus[$status] }}</span>
-                                    <span class="h-2.5 w-2.5 rounded-full {{ $statusMeta[$status]['dot'] }}"></span>
+                                    <span class="text-xs font-bold uppercase text-slate-500">{{ $labelStatus[$status] }}</span>
+                                    <span class="h-2.5 w-2.5 rounded-full {{ $status === 'menunggu' ? 'bg-amber-500' : ($status === 'disetujui' ? 'bg-emerald-600' : 'bg-rose-600') }}"></span>
                                 </div>
-                                <p class="mt-2 text-3xl font-semibold">{{ (int) ($ringkasanStatus[$status] ?? 0) }}</p>
+                                <p class="mt-2 text-2xl font-bold">{{ (int) ($ringkasanStatus[$status] ?? 0) }}</p>
                             </a>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0">
+                <div class="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0 flex flex-col justify-center">
                     <div class="flex items-center gap-3">
-                        <div class="grid h-11 w-11 place-items-center rounded-md bg-teal-300 text-slate-950">
+                        <div class="grid h-11 w-11 place-items-center rounded-xl bg-teal-400 text-slate-950">
                             <i data-lucide="inbox"></i>
                         </div>
                         <div>
-                            <p class="text-sm text-slate-300">Total Pengajuan</p>
-                            <p class="text-3xl font-semibold">{{ $totalPengajuan }}</p>
+                            <p class="text-xs font-semibold uppercase text-slate-400">Total Pengajuan</p>
+                            <p class="text-3xl font-bold">{{ $totalPengajuan }}</p>
                         </div>
                     </div>
-                    <div class="mt-5 space-y-3">
+                    <div class="mt-5 space-y-2">
                         @foreach ($labelJenis as $jenis => $label)
                             @php
                                 $totalJenis = (int) ($ringkasanJenis[$jenis] ?? 0);
-                                $persenJenis = $totalPengajuan > 0 ? min(100, round(($totalJenis / $totalPengajuan) * 100)) : 0;
-                                $barJenis = ['izin' => 'bg-sky-300', 'sakit' => 'bg-violet-300', 'cuti' => 'bg-indigo-300'][$jenis];
                             @endphp
-                            <div>
-                                <div class="mb-1 flex justify-between text-sm">
-                                    <span class="text-slate-300">{{ $label }}</span>
-                                    <span class="font-semibold">{{ $totalJenis }}</span>
-                                </div>
-                                <div class="h-2 rounded-full bg-white/10">
-                                    <div class="h-2 rounded-full {{ $barJenis }}" style="width: {{ $persenJenis }}%"></div>
-                                </div>
+                            <div class="flex items-center justify-between rounded-lg bg-white/[0.06] p-2.5 text-xs">
+                                <span class="text-slate-300 font-medium">{{ $label }}</span>
+                                <span class="font-bold text-teal-300">{{ $totalJenis }} pengajuan</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section class="rounded-md border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5">
-            <form class="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
-                <div class="relative">
-                    <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input name="q" value="{{ request('q') }}" placeholder="Cari nama, email, NIP" class="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-700/10">
-                </div>
-                <select name="status" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                    <option value="">Semua status</option>
-                    @foreach ($labelStatus as $status => $label)
-                        <option value="{{ $status }}" @selected($statusAktif === $status)>{{ $label }}</option>
+            <!-- Filter Bar -->
+            <form method="get" class="border-t border-slate-200 bg-slate-50/70 p-4 flex flex-wrap gap-2">
+                <input name="q" value="{{ request('q') }}" placeholder="Cari nama murid, NIS..." class="w-64 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs focus:border-teal-500 focus:outline-none">
+                <select name="status" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs">
+                    <option value="">Semua Status</option>
+                    @foreach ($labelStatus as $s => $lbl)
+                        <option value="{{ $s }}" @selected(request('status') === $s)>{{ $lbl }}</option>
                     @endforeach
                 </select>
-                <select name="jenis" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                    <option value="">Semua jenis</option>
-                    @foreach ($labelJenis as $jenis => $label)
-                        <option value="{{ $jenis }}" @selected($jenisAktif === $jenis)>{{ $label }}</option>
+                <select name="jenis" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs">
+                    <option value="">Semua Jenis</option>
+                    @foreach ($labelJenis as $j => $lbl)
+                        <option value="{{ $j }}" @selected(request('jenis') === $j)>{{ $lbl }}</option>
                     @endforeach
                 </select>
-                <input name="tanggal_mulai" type="date" value="{{ request('tanggal_mulai') }}" placeholder="Tanggal izin mulai" title="Tanggal izin mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="tanggal_selesai" type="date" value="{{ request('tanggal_selesai') }}" placeholder="Tanggal izin selesai" title="Tanggal izin selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="diajukan_mulai" type="date" value="{{ request('diajukan_mulai') }}" placeholder="Tanggal pengajuan mulai" title="Tanggal pengajuan mulai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <input name="diajukan_selesai" type="date" value="{{ request('diajukan_selesai') }}" placeholder="Tanggal pengajuan selesai" title="Tanggal pengajuan selesai" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                <select name="sort" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                    <option value="dibuat_pada" @selected(request('sort', 'dibuat_pada') === 'dibuat_pada')>Urut: Diajukan</option>
-                    <option value="nama" @selected(request('sort') === 'nama')>Urut: Nama Guru</option>
-                    <option value="tanggal_mulai" @selected(request('sort') === 'tanggal_mulai')>Urut: Tanggal Mulai</option>
-                    <option value="tanggal_selesai" @selected(request('sort') === 'tanggal_selesai')>Urut: Tanggal Selesai</option>
-                    <option value="jenis" @selected(request('sort') === 'jenis')>Urut: Jenis</option>
-                    <option value="status" @selected(request('sort') === 'status')>Urut: Status</option>
-                </select>
-                <select name="direction" class="rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                    <option value="desc" @selected(request('direction', 'desc') === 'desc')>Menurun</option>
-                    <option value="asc" @selected(request('direction') === 'asc')>Menaik</option>
-                </select>
-                <button class="inline-flex items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">
-                    <i data-lucide="filter"></i>
-                    Terapkan
-                </button>
-                <a href="{{ route('admin.pengajuan-izin.index') }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Reset</a>
+                <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800">Filter</button>
+                <a href="{{ route('admin.pengajuan-izin.index') }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Reset</a>
             </form>
         </section>
 
-        <section class="space-y-4">
-            @forelse ($pengajuanIzin as $pengajuan)
-                @php
-                    $status = $pengajuan->status;
-                    $jenis = $pengajuan->jenis;
-                    $statusClass = $statusMeta[$status]['chip'] ?? 'bg-slate-100 text-slate-700 ring-slate-200';
-                    $jenisClass = $jenisMeta[$jenis]['chip'] ?? 'bg-slate-100 text-slate-700 ring-slate-200';
-                    $jumlahHari = $pengajuan->tanggal_mulai->diffInDays($pengajuan->tanggal_selesai) + 1;
-                @endphp
-                <article class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm shadow-slate-900/5">
-                    <div class="grid lg:grid-cols-[minmax(0,1fr)_340px]">
-                        <div class="p-4 sm:p-5">
-                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                <div class="flex min-w-0 items-start gap-3">
-                                    <div class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-slate-950 text-sm font-semibold text-white">{{ str($pengajuan->pengguna?->nama ?? '?')->substr(0, 1)->upper() }}</div>
-                                    <div class="min-w-0">
-                                        <h2 class="truncate text-lg font-semibold">{{ $pengajuan->pengguna?->nama }}</h2>
-                                        <p class="mt-1 text-sm text-slate-500">{{ $pengajuan->guru?->nip ?: $pengajuan->pengguna?->nomor_pegawai ?: 'Nomor pegawai belum diisi' }}</p>
+        <!-- Tabel Pengajuan -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-3.5"><x-admin.sort-link kolom="dibuat_pada" label="Tanggal" /></th>
+                        <th class="px-4 py-3.5"><x-admin.sort-link kolom="nama" label="Murid" /></th>
+                        <th class="px-4 py-3.5">Kelas & Mapel</th>
+                        <th class="px-4 py-3.5"><x-admin.sort-link kolom="jenis" label="Jenis" /></th>
+                        <th class="px-4 py-3.5"><x-admin.sort-link kolom="tanggal_mulai" label="Periode" /></th>
+                        <th class="px-4 py-3.5">Keterangan & Bukti</th>
+                        <th class="px-4 py-3.5"><x-admin.sort-link kolom="status" label="Status" /></th>
+                        @if ($bolehMeninjau)
+                            <th class="px-4 py-3.5 text-right">Aksi</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse ($pengajuanIzin as $pengajuan)
+                        @php
+                            $jumlahHari = $pengajuan->tanggal_mulai->diffInDays($pengajuan->tanggal_selesai) + 1;
+                        @endphp
+                        <tr class="hover:bg-slate-50/75 align-top">
+                            <td class="whitespace-nowrap px-4 py-3.5">
+                                <span class="font-semibold text-slate-800 block">{{ $pengajuan->dibuat_pada?->format('d/m/Y') }}</span>
+                                <span class="text-xs text-slate-400">{{ $pengajuan->dibuat_pada?->format('H:i') }} WIB</span>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                <span class="font-bold text-slate-900 block">{{ $pengajuan->pengguna?->nama }}</span>
+                                <span class="font-mono text-xs text-slate-400">NIS: {{ $pengajuan->murid?->nis }}</span>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                <span class="font-semibold text-slate-800 block">{{ $pengajuan->murid?->kelas?->nama_kelas ?: '-' }}</span>
+                                <span class="text-xs text-slate-500">{{ $pengajuan->jadwalPelajaran?->mataPelajaran?->nama_mapel ?: 'Semua Mapel' }}</span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3.5">
+                                <x-badge-jenis :jenis="$pengajuan->jenis" />
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3.5">
+                                <span class="font-semibold text-slate-800 block">
+                                    {{ $pengajuan->tanggal_mulai->format('d/m/Y') }} - {{ $pengajuan->tanggal_selesai->format('d/m/Y') }}
+                                </span>
+                                <span class="text-xs text-slate-400">{{ $jumlahHari }} hari</span>
+                            </td>
+                            <td class="px-4 py-3.5 min-w-[200px]">
+                                <p class="text-xs text-slate-700 leading-relaxed">{{ $pengajuan->alasan }}</p>
+                                @if ($pengajuan->dokumen->isNotEmpty())
+                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                        @foreach ($pengajuan->dokumen as $dokumen)
+                                            <a href="{{ asset('storage/'.$dokumen->path) }}" target="_blank" class="inline-flex items-center gap-1 rounded-md border border-teal-200 bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-700 hover:bg-teal-100 transition shadow-2xs" title="{{ $dokumen->nama_asli }}">
+                                                <i data-lucide="paperclip" class="h-3 w-3 text-teal-600"></i>
+                                                <span class="max-w-[120px] truncate">{{ $dokumen->nama_asli }}</span>
+                                                <i data-lucide="external-link" class="h-2.5 w-2.5 text-teal-500"></i>
+                                            </a>
+                                        @endforeach
                                     </div>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 {{ $jenisClass }}">
-                                        <i data-lucide="{{ $jenisMeta[$jenis]['icon'] ?? 'file-text' }}"></i>
-                                        {{ $labelJenis[$jenis] ?? ucfirst($jenis) }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 {{ $statusClass }}">
-                                        <i data-lucide="{{ $statusMeta[$status]['icon'] ?? 'circle' }}"></i>
-                                        {{ $labelStatus[$status] ?? ucfirst($status) }}
-                                    </span>
-                                </div>
-                            </div>
+                                @endif
+                                @if ($pengajuan->alasan_penolakan)
+                                    <div class="mt-2 rounded-md bg-rose-50 p-2 text-xs text-rose-700 border border-rose-200">
+                                        <span class="font-bold">Alasan ditolak:</span> {{ $pengajuan->alasan_penolakan }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3.5">
+                                <x-badge-status :status="$pengajuan->status" />
+                                @if ($pengajuan->peninjau)
+                                    <div class="mt-1 text-[11px] text-slate-400" title="Ditinjau pada {{ $pengajuan->ditinjau_pada?->format('d/m/Y H:i') }} WIB">
+                                        Oleh: {{ $pengajuan->peninjau->nama }}
+                                    </div>
+                                @endif
+                            </td>
+                            @if ($bolehMeninjau)
+                                <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                                    @if ($pengajuan->status === 'menunggu')
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <form method="post" action="{{ route('admin.pengajuan-izin.setujui', $pengajuan) }}" class="inline-block" data-confirm data-confirm-title="Setujui permohonan ini?" data-confirm-text="Status kehadiran siswa pada jadwal pelajaran tersebut akan otomatis diperbarui." data-confirm-button="Ya, Setujui" data-confirm-variant="success">
+                                                @csrf
+                                                <button type="submit" class="rounded-md border border-teal-600 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700 shadow-xs hover:bg-teal-100 transition inline-flex items-center gap-1">
+                                                    <i data-lucide="check" class="h-3.5 w-3.5"></i>
+                                                    <span>Setujui Izin / Sakit</span>
+                                                </button>
+                                            </form>
+                                            <button type="button" onclick="document.getElementById('modal-tolak-{{ $pengajuan->id }}').showModal()" class="rounded-md border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 shadow-xs hover:bg-rose-50 transition inline-flex items-center gap-1">
+                                                <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                                                <span>Tolak</span>
+                                            </button>
+                                        </div>
 
-                            <div class="mt-5 grid gap-3 sm:grid-cols-3">
-                                <div class="rounded-md bg-slate-50 px-3 py-3">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Mulai</p>
-                                    <p class="mt-1 text-sm font-semibold">{{ $pengajuan->tanggal_mulai->format('d M Y') }}</p>
-                                </div>
-                                <div class="rounded-md bg-slate-50 px-3 py-3">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Selesai</p>
-                                    <p class="mt-1 text-sm font-semibold">{{ $pengajuan->tanggal_selesai->format('d M Y') }}</p>
-                                </div>
-                                <div class="rounded-md bg-slate-50 px-3 py-3">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Durasi</p>
-                                    <p class="mt-1 text-sm font-semibold">{{ $jumlahHari }} hari</p>
-                                </div>
-                            </div>
-
-                            <div class="mt-5">
-                                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Alasan</p>
-                                <p class="mt-2 text-sm leading-6 text-slate-700">{{ $pengajuan->alasan }}</p>
-                            </div>
-
-                            @if ($pengajuan->dokumen->isNotEmpty())
-                                <div class="mt-5 flex flex-wrap gap-2">
-                                    @foreach ($pengajuan->dokumen as $dokumen)
-                                        <a class="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800" href="{{ asset('storage/'.$dokumen->path) }}" target="_blank">
-                                            <i data-lucide="paperclip"></i>
-                                            {{ $dokumen->nama_asli }}
-                                        </a>
-                                    @endforeach
-                                </div>
+                                        <!-- Modal Dialog Tolak -->
+                                        <dialog id="modal-tolak-{{ $pengajuan->id }}" onclick="if (event.target === this) this.close()" class="rounded-xl border border-slate-200 p-0 shadow-2xl backdrop:bg-slate-900/50 max-w-md w-full m-auto text-left">
+                                            <div class="p-5">
+                                                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                                    <h3 class="text-base font-bold text-slate-900">Tolak Pengajuan Izin</h3>
+                                                    <button type="button" onclick="document.getElementById('modal-tolak-{{ $pengajuan->id }}').close()" class="text-slate-400 hover:text-slate-600">
+                                                        <i data-lucide="x" class="h-4 w-4"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="mt-3 text-xs text-slate-600">
+                                                    <p>Murid: <span class="font-bold text-slate-900">{{ $pengajuan->pengguna?->nama }}</span> ({{ $pengajuan->murid?->nis }})</p>
+                                                    <p class="mt-0.5">Periode: <span class="font-semibold">{{ $pengajuan->tanggal_mulai->format('d/m/Y') }} - {{ $pengajuan->tanggal_selesai->format('d/m/Y') }}</span></p>
+                                                </div>
+                                                <form method="post" action="{{ route('admin.pengajuan-izin.tolak', $pengajuan) }}" class="mt-4 space-y-3">
+                                                    @csrf
+                                                    <div>
+                                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Alasan Penolakan <span class="text-rose-500">*</span></label>
+                                                        <textarea name="alasan_penolakan" rows="3" required placeholder="Tulis alasan penolakan agar siswa memahami alasannya..." class="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:border-rose-500 focus:outline-none"></textarea>
+                                                    </div>
+                                                    <div class="flex justify-end gap-2 pt-2">
+                                                        <button type="button" onclick="document.getElementById('modal-tolak-{{ $pengajuan->id }}').close()" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                                                        <button type="submit" class="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700">Tolak Pengajuan</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </dialog>
+                                    @else
+                                        <span class="text-xs text-slate-400">Selesai</span>
+                                    @endif
+                                </td>
                             @endif
-
-                            @if ($pengajuan->alasan_penolakan)
-                                <div class="mt-5 rounded-md bg-rose-50 px-3 py-3 text-sm text-rose-800">
-                                    <span class="font-semibold">Alasan ditolak:</span> {{ $pengajuan->alasan_penolakan }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <aside class="border-t border-slate-200 bg-slate-50 p-4 sm:p-5 lg:border-l lg:border-t-0">
-                            <div class="mb-4">
-                                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Diajukan</p>
-                                <p class="mt-1 text-sm font-semibold">{{ $pengajuan->dibuat_pada?->format('d M Y, H:i') }}</p>
-                            </div>
-
-                            @if ($pengajuan->status === 'menunggu' && $bolehMeninjau)
-                                <div class="space-y-3">
-                                    <form method="post" action="{{ route('admin.pengajuan-izin.setujui', $pengajuan) }}" data-confirm data-confirm-title="Setujui pengajuan?" data-confirm-text="Sistem akan membuat atau memperbarui catatan presensi sesuai tanggal pengajuan." data-confirm-button="Setujui" data-confirm-variant="success">
-                                        @csrf
-                                        <button class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">
-                                            <i data-lucide="check"></i>
-                                            Setujui Pengajuan
-                                        </button>
-                                    </form>
-
-                                    <form method="post" action="{{ route('admin.pengajuan-izin.tolak', $pengajuan) }}" data-confirm data-confirm-title="Tolak pengajuan?" data-confirm-text="Pastikan alasan penolakan sudah jelas sebelum dikirim." data-confirm-button="Tolak" data-confirm-variant="danger">
-                                        @csrf
-                                        <textarea name="alasan_penolakan" rows="3" required placeholder="Alasan penolakan" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-rose-600 focus:outline-none focus:ring-4 focus:ring-rose-600/10"></textarea>
-                                        <button class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50">
-                                            <i data-lucide="x"></i>
-                                            Tolak Pengajuan
-                                        </button>
-                                    </form>
-                                </div>
-                            @elseif ($pengajuan->status === 'menunggu')
-                                <div class="rounded-md bg-white p-3">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Status</p>
-                                    <p class="mt-1 text-sm font-semibold text-amber-700">Menunggu peninjauan admin</p>
-                                    <p class="mt-1 text-xs text-slate-500">Kepala sekolah dapat memantau pengajuan tanpa menyetujui atau menolak.</p>
-                                </div>
-                            @else
-                                <div class="rounded-md bg-white p-3">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Ditinjau oleh</p>
-                                    <p class="mt-1 text-sm font-semibold">{{ $pengajuan->peninjau?->nama ?: '-' }}</p>
-                                    <p class="mt-1 text-xs text-slate-500">{{ $pengajuan->ditinjau_pada?->format('d M Y, H:i') ?: '-' }}</p>
-                                </div>
-                            @endif
-                        </aside>
-                    </div>
-                </article>
-            @empty
-                <div class="rounded-md border border-slate-200 bg-white p-10 text-center shadow-sm">
-                    <div class="mx-auto grid h-12 w-12 place-items-center rounded-md bg-slate-100 text-slate-500">
-                        <i data-lucide="inbox"></i>
-                    </div>
-                    <h2 class="mt-4 font-semibold">Belum ada pengajuan</h2>
-                    <p class="mt-1 text-sm text-slate-500">Data akan tampil di sini setelah guru mengirim pengajuan izin, sakit, atau cuti.</p>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $bolehMeninjau ? 8 : 7 }}" class="px-4 py-8 text-center text-slate-400">
+                                Belum ada pengajuan izin/sakit yang sesuai kriteria.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            @if ($pengajuanIzin->hasPages())
+                <div class="border-t border-slate-200 px-4 py-3">
+                    {{ $pengajuanIzin->links() }}
                 </div>
-            @endforelse
-        </section>
-
-        <div>{{ $pengajuanIzin->links() }}</div>
+            @endif
+        </div>
     </div>
 </x-admin.layout>

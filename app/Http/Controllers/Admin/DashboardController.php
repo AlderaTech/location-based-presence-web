@@ -4,88 +4,136 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Guru;
+use App\Models\JadwalPelajaran;
+use App\Models\Kelas;
+use App\Models\MataPelajaran;
+use App\Models\Murid;
 use App\Models\PengajuanIzin;
 use App\Models\Presensi;
+use App\Models\SesiPresensi;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
+        $user = $request->user();
+        $isGuru = $user->adalahGuru();
+        $guruId = $user->guru?->id;
+
         $hariIni = today();
-        $awalBulan = CarbonImmutable::now()->startOfMonth();
-        $akhirGrafik = CarbonImmutable::now();
+        $hariMap = [
+            0 => 'minggu',
+            1 => 'senin',
+            2 => 'selasa',
+            3 => 'rabu',
+            4 => 'kamis',
+            5 => 'jumat',
+            6 => 'sabtu',
+        ];
+        $hariIniStr = $hariMap[(int) now()->dayOfWeek] ?? 'senin';
+
+        $jumlahMurid = Murid::query()->where('aktif', true)->count();
         $jumlahGuru = Guru::query()->where('aktif', true)->count();
-        $presensiHariIni = Presensi::query()
-            ->whereDate('tanggal_presensi', $hariIni)
-            ->get();
+        $jumlahKelas = Kelas::query()->where('aktif', true)->count();
+        $jumlahMapel = MataPelajaran::query()->where('aktif', true)->count();
+
+        // Presensi query
+        $presensiHariIniQuery = Presensi::query()->whereDate('tanggal_presensi', $hariIni);
+        if ($isGuru && $guruId) {
+            $presensiHariIniQuery->whereHas('jadwalPelajaran', fn ($j) => $j->where('id_guru', $guruId));
+        }
+        $presensiHariIni = $presensiHariIniQuery->get();
 
         $ringkasan = [
             'hadir' => $presensiHariIni->where('status', 'hadir')->count(),
             'terlambat' => $presensiHariIni->where('status', 'terlambat')->count(),
-            'izin' => $presensiHariIni->whereIn('status', ['izin', 'sakit', 'cuti'])->count(),
-            'alpha' => max($jumlahGuru - $presensiHariIni->count(), 0),
+            'izin' => $presensiHariIni->where('status', 'izin')->count(),
+            'sakit' => $presensiHariIni->where('status', 'sakit')->count(),
+            'alfa' => $presensiHariIni->where('status', 'alfa')->count(),
         ];
 
-        $presensiBulanIni = Presensi::query()
-            ->whereBetween('tanggal_presensi', [$awalBulan->toDateString(), $akhirGrafik->toDateString()])
-            ->get()
-            ->groupBy(fn (Presensi $presensi) => $presensi->tanggal_presensi?->toDateString());
+        // Tren presensi 7 hari terakhir
+        $awalGrafik = CarbonImmutable::now()->subDays(6);
+        $akhirGrafik = CarbonImmutable::now();
+        $presensiPeriode = Presensi::query()
+            ->whereBetween('tanggal_presensi', [$awalGrafik->toDateString(), $akhirGrafik->toDateString()]);
+        if ($isGuru && $guruId) {
+            $presensiPeriode->whereHas('jadwalPelajaran', fn ($j) => $j->where('id_guru', $guruId));
+        }
+        $presensiGrouped = $presensiPeriode->get()->groupBy(fn (Presensi $p) => $p->tanggal_presensi?->toDateString());
 
-        $bulanan = $presensiBulanIni->values()->collapse()->groupBy('status')->map->count();
-        $hariDalamBulan = collect(CarbonPeriod::create($awalBulan, $akhirGrafik));
+        $hariDalamPeriode = collect(CarbonPeriod::create($awalGrafik, $akhirGrafik));
         $trenHarian = [
-            'labels' => $hariDalamBulan->map(fn ($tanggal) => $tanggal->format('d M'))->values(),
-            'hadir' => $hariDalamBulan->map(fn ($tanggal) => $presensiBulanIni
+            'labels' => $hariDalamPeriode->map(fn ($tanggal) => $tanggal->format('d M'))->values(),
+            'hadir' => $hariDalamPeriode->map(fn ($tanggal) => $presensiGrouped
                 ->get($tanggal->toDateString(), collect())
                 ->where('status', 'hadir')
                 ->count())->values(),
-            'terlambat' => $hariDalamBulan->map(fn ($tanggal) => $presensiBulanIni
+            'terlambat' => $hariDalamPeriode->map(fn ($tanggal) => $presensiGrouped
                 ->get($tanggal->toDateString(), collect())
                 ->where('status', 'terlambat')
                 ->count())->values(),
-            'izin' => $hariDalamBulan->map(fn ($tanggal) => $presensiBulanIni
+            'izin' => $hariDalamPeriode->map(fn ($tanggal) => $presensiGrouped
                 ->get($tanggal->toDateString(), collect())
-                ->whereIn('status', ['izin', 'sakit', 'cuti'])
+                ->whereIn('status', ['izin', 'sakit'])
                 ->count())->values(),
         ];
 
-        $totalHadir = $ringkasan['hadir'] + $ringkasan['terlambat'];
-        $tingkatKehadiran = $jumlahGuru > 0 ? round(($totalHadir / $jumlahGuru) * 100) : 0;
-        $pengajuanRingkasan = PengajuanIzin::query()
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $pengajuanMenungguQuery = PengajuanIzin::query()->where('status', 'menunggu');
+        if ($isGuru && $guruId) {
+            $kelasGuru = JadwalPelajaran::query()->where('id_guru', $guruId)->pluck('id_kelas')->unique();
+            $pengajuanMenungguQuery->whereHas('murid', fn ($m) => $m->whereIn('id_kelas', $kelasGuru));
+        }
+        $pengajuanMenunggu = $pengajuanMenungguQuery->count();
+        $pengajuanMenungguTerbaru = (clone $pengajuanMenungguQuery)->with(['pengguna', 'murid.kelas'])->latest('dibuat_pada')->limit(5)->get();
+
+        // Presensi terbaru
+        $presensiTerbaruQuery = Presensi::query()
+            ->with(['pengguna', 'murid.kelas', 'jadwalPelajaran.mataPelajaran', 'jadwalPelajaran.kelas', 'jadwalPelajaran.guru.pengguna'])
+            ->latest('waktu_presensi')
+            ->limit(8);
+        if ($isGuru && $guruId) {
+            $presensiTerbaruQuery->whereHas('jadwalPelajaran', fn ($j) => $j->where('id_guru', $guruId));
+        }
+        $presensiTerbaru = $presensiTerbaruQuery->get();
+
+        // Khusus Guru: Jadwal hari ini & Sesi Aktif
+        $jadwalGuruHariIni = collect();
+        $sesiAktifGuru = collect();
+        if ($isGuru && $guruId) {
+            $jadwalGuruHariIni = JadwalPelajaran::query()
+                ->with(['mataPelajaran', 'kelas', 'lokasiSekolah'])
+                ->where('id_guru', $guruId)
+                ->where('hari', $hariIniStr)
+                ->where('aktif', true)
+                ->orderBy('jam_mulai')
+                ->get();
+
+            $sesiAktifGuru = SesiPresensi::query()
+                ->with(['jadwalPelajaran.mataPelajaran', 'jadwalPelajaran.kelas'])
+                ->where('id_guru', $guruId)
+                ->whereDate('tanggal', $hariIni)
+                ->where('status', 'aktif')
+                ->get();
+        }
 
         return view('admin.dashboard', [
+            'isGuru' => $isGuru,
             'ringkasan' => $ringkasan,
-            'bulanan' => $bulanan,
             'trenHarian' => $trenHarian,
-            'tingkatKehadiran' => $tingkatKehadiran,
-            'pengajuanRingkasan' => $pengajuanRingkasan,
-            'pengajuanMenunggu' => (int) ($pengajuanRingkasan['menunggu'] ?? 0),
+            'jumlahMurid' => $jumlahMurid,
             'jumlahGuru' => $jumlahGuru,
-            'guruBelumPresensi' => Guru::query()
-                ->with('pengguna')
-                ->where('aktif', true)
-                ->whereDoesntHave('presensi', fn ($query) => $query->whereDate('tanggal_presensi', $hariIni))
-                ->orderBy('id')
-                ->limit(6)
-                ->get(),
-            'pengajuanMenungguTerbaru' => PengajuanIzin::query()
-                ->with('pengguna')
-                ->where('status', 'menunggu')
-                ->latest('dibuat_pada')
-                ->limit(5)
-                ->get(),
-            'presensiTerbaru' => Presensi::query()
-                ->with('pengguna', 'jadwalKerja', 'lokasiSekolah')
-                ->latest('tanggal_presensi')
-                ->latest('dibuat_pada')
-                ->limit(6)
-                ->get(),
+            'jumlahKelas' => $jumlahKelas,
+            'jumlahMapel' => $jumlahMapel,
+            'pengajuanMenunggu' => $pengajuanMenunggu,
+            'pengajuanMenungguTerbaru' => $pengajuanMenungguTerbaru,
+            'presensiTerbaru' => $presensiTerbaru,
+            'jadwalGuruHariIni' => $jadwalGuruHariIni,
+            'sesiAktifGuru' => $sesiAktifGuru,
         ]);
     }
 }

@@ -21,8 +21,7 @@ class DashboardAdminTest extends TestCase
             ->get('/admin')
             ->assertOk()
             ->assertSee('Dasbor Presensi')
-            ->assertSee('grafikTrenPresensi', false)
-            ->assertSee('grafikStatusBulanan', false)
-            ->assertSee('Belum Presensi Hari Ini');
+            ->assertSee('Hadir Tepat Waktu')
+            ->assertSee('Catatan Presensi Terkini');
     }
 }

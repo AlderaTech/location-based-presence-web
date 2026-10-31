@@ -34,21 +34,19 @@
                 @forelse ($jadwalKerja as $jadwal)
                     <tr class="hover:bg-slate-50/70">
                         <td class="px-4 py-3 font-medium">{{ $jadwal->nama }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">{{ $jadwal->jam_masuk }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">{{ $jadwal->jam_pulang }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-mono text-xs">{{ substr($jadwal->jam_masuk, 0, 5) }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-mono text-xs">{{ substr($jadwal->jam_pulang, 0, 5) }}</td>
                         <td class="px-4 py-3">{{ $jadwal->toleransi_terlambat_menit }} menit</td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $jadwal->aktif ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-200' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200' }}">
-                                {{ $jadwal->aktif ? 'Aktif' : 'Nonaktif' }}
-                            </span>
+                            <x-badge-aktif :aktif="$jadwal->aktif" />
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex justify-end gap-2">
-                                <a href="{{ route('admin.jadwal-kerja.edit', $jadwal) }}" class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">Edit</a>
+                            <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                <a href="{{ route('admin.jadwal-kerja.edit', $jadwal) }}" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50">Edit</a>
                                 <form method="post" action="{{ route('admin.jadwal-kerja.destroy', $jadwal) }}" data-confirm data-confirm-title="Nonaktifkan jadwal kerja?" data-confirm-text="Jadwal ini tidak lagi tersedia untuk data guru baru atau pembaruan berikutnya." data-confirm-button="Nonaktifkan" data-confirm-variant="danger">
                                     @csrf
                                     @method('delete')
-                                    <button class="rounded-md border border-red-300 px-3 py-1.5 font-medium text-red-700 hover:bg-red-50">Nonaktifkan</button>
+                                    <button class="rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-semibold text-red-600 shadow-xs transition hover:bg-red-50">Nonaktifkan</button>
                                 </form>
                             </div>
                         </td>

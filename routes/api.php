@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\Mobile\PresensiController;
 use App\Http\Controllers\Api\Mobile\AuthController;
 use App\Http\Controllers\Api\Mobile\PengajuanIzinController;
+use App\Http\Controllers\Api\Mobile\PresensiController;
 use App\Http\Controllers\Api\Mobile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,10 +16,12 @@ Route::prefix('mobile')->name('mobile.')->group(function (): void {
         Route::get('profil', [ProfileController::class, 'tampil'])->name('profil.tampil');
         Route::put('profil/pengaturan-notifikasi', [ProfileController::class, 'ubahPengaturanNotifikasi'])->name('profil.notifikasi');
         Route::get('jadwal-kerja', [ProfileController::class, 'jadwalKerja'])->name('profil.jadwal-kerja');
+        Route::get('jadwal-pelajaran/hari-ini', [ProfileController::class, 'jadwalHariIni'])->name('profil.jadwal-hari-ini');
         Route::get('hari-libur', [ProfileController::class, 'hariLibur'])->name('profil.hari-libur');
 
         Route::get('presensi/hari-ini', [PresensiController::class, 'hariIni'])->name('presensi.hari-ini');
         Route::post('presensi/catat', [PresensiController::class, 'catat'])->name('presensi.catat');
+        Route::post('presensi/scan', [PresensiController::class, 'catat'])->name('presensi.scan');
         Route::get('presensi/riwayat', [PresensiController::class, 'riwayat'])->name('presensi.riwayat');
 
         Route::get('pengajuan-izin', [PengajuanIzinController::class, 'index'])->name('pengajuan-izin.index');

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LokasiSekolah;
-use App\Support\SortirAdmin;
+use App\Support\AdminSortHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,7 +19,7 @@ class LokasiSekolahController extends Controller
             ->when($request->query('radius_min'), fn ($query, $radius) => $query->where('radius_meter', '>=', $radius))
             ->when($request->query('radius_max'), fn ($query, $radius) => $query->where('radius_meter', '<=', $radius));
 
-        SortirAdmin::terapkan($query, $request, [
+        AdminSortHelper::terapkan($query, $request, [
             'nama' => 'lokasi_sekolah.nama',
             'radius' => 'lokasi_sekolah.radius_meter',
             'status' => 'lokasi_sekolah.aktif',

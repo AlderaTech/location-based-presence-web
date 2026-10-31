@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class PastikanPenggunaAdmin
+class EnsureAdminUserMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -15,8 +15,10 @@ class PastikanPenggunaAdmin
             return redirect()->route('admin.masuk');
         }
 
-        if (! Auth::user()->adalahAdmin() || ! Auth::user()->aktif()) {
-            abort(403, 'Akun ini tidak memiliki akses dashboard admin.');
+        $user = Auth::user();
+
+        if ((! $user->adalahAdmin() && ! $user->adalahGuru()) || ! $user->aktif()) {
+            abort(403, 'Akun ini tidak memiliki akses dashboard web.');
         }
 
         return $next($request);

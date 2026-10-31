@@ -55,6 +55,11 @@ class Pengguna extends Authenticatable
         return $this->hasOne(Guru::class, 'id_pengguna');
     }
 
+    public function murid(): HasOne
+    {
+        return $this->hasOne(Murid::class, 'id_pengguna');
+    }
+
     public function perangkat(): HasMany
     {
         return $this->hasMany(PerangkatPengguna::class, 'id_pengguna');
@@ -67,12 +72,17 @@ class Pengguna extends Authenticatable
 
     public function adalahAdmin(): bool
     {
-        return in_array($this->peran, ['admin', 'kepala_sekolah'], true);
+        return $this->peran === 'admin';
     }
 
     public function adalahGuru(): bool
     {
         return $this->peran === 'guru';
+    }
+
+    public function adalahMurid(): bool
+    {
+        return $this->peran === 'murid';
     }
 
     public function aktif(): bool

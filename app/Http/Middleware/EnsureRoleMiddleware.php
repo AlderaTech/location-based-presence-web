@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class PastikanPeran
+class EnsureRoleMiddleware
 {
     public function handle(Request $request, Closure $next, string ...$peran): Response
     {

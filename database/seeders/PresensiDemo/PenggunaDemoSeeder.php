@@ -3,114 +3,166 @@
 namespace Database\Seeders\PresensiDemo;
 
 use App\Models\Guru;
-use App\Models\JadwalKerja;
+use App\Models\Kelas;
+use App\Models\MataPelajaran;
+use App\Models\Murid;
 use App\Models\Pengguna;
-use Database\Seeders\PresensiDemo\Concerns\MembuatDataDemo;
+use Database\Seeders\PresensiDemo\Concerns\CreatesDemoData;
 use Illuminate\Database\Seeder;
 
 class PenggunaDemoSeeder extends Seeder
 {
-    use MembuatDataDemo;
+    use CreatesDemoData;
 
-    public function run(): void
-    {
-        $jadwalKerja = app(JadwalKerjaDemoSeeder::class)->seed();
-        $guru = $this->seedGuru($jadwalKerja);
-
-        $this->seedPenggunaAdmin();
-        $this->seedPerangkat($guru);
-    }
-
-    /**
-     * @return array<string, Pengguna>
-     */
-    public function seedPenggunaAdmin(): array
+    public function seedAdmin(): array
     {
         return [
-            'admin' => $this->pengguna('admin@presensi.test', 'Admin Presensi', 'admin', 'ADM-001', '081200000001'),
-            'kepala_sekolah' => $this->pengguna('kepsek@presensi.test', 'Kepala Sekolah', 'kepala_sekolah', 'ADM-003', '081200000003'),
+            'admin' => $this->pengguna('admin@presensi.test', 'Admin Sekolah', 'admin', 'ADM-001', '081200000001'),
         ];
     }
 
     /**
-     * @param  array<string, JadwalKerja>  $jadwalKerja
-     * @return array<int, Guru>
+     * @return array<string, Guru>
      */
-    public function seedGuru(array $jadwalKerja): array
+    public function seedGuru(): array
     {
-        $items = [
-            ['G-001', 'Guru Demo', 'guru@presensi.test', 'Matematika', 'Wali Kelas 7A', 'reguler', true],
-            ['G-002', 'Siti Aminah', 'siti.aminah@presensi.test', 'Bahasa Indonesia', 'Guru', 'reguler', true],
-            ['G-003', 'Budi Santoso', 'budi.santoso@presensi.test', 'IPA', 'Guru', 'pagi', true],
-            ['G-004', 'Dewi Lestari', 'dewi.lestari@presensi.test', 'IPS', 'Guru', 'reguler', true],
-            ['G-005', 'Rizky Pratama', 'rizky.pratama@presensi.test', 'Bahasa Inggris', 'Guru', 'siang', true],
-            ['G-006', 'Nur Hasanah', 'nur.hasanah@presensi.test', 'PAI', 'Guru', 'reguler', true],
-            ['G-007', 'Agus Salim', 'agus.salim@presensi.test', 'PJOK', 'Pembina OSIS', 'pagi', true],
-            ['G-008', 'Maya Kartika', 'maya.kartika@presensi.test', 'Seni Budaya', 'Guru', 'siang', true],
-            ['G-009', 'Fajar Nugroho', 'fajar.nugroho@presensi.test', 'Prakarya', 'Guru', 'reguler', true],
-            ['G-010', 'Indah Permata', 'indah.permata@presensi.test', 'BK', 'Guru BK', 'reguler', true],
-            ['G-011', 'Rani Wijaya', 'rani.wijaya@presensi.test', 'TIK', 'Operator Lab', 'pagi', true],
-            ['G-012', 'Hendra Saputra', 'hendra.saputra@presensi.test', 'Fisika', 'Guru Nonaktif', 'reguler', false],
+        $dataGuru = [
+            'guru' => ['guru@presensi.test', 'Budi Santoso, M.Pd.', '198501012010011001', 'Matematika', '081211110001'],
+            'siti' => ['siti@presensi.test', 'Dra. Siti Aminah', '198802022012022002', 'Bahasa Indonesia', '081211110002'],
+            'hendra' => ['hendra@presensi.test', 'Hendra Saputra, S.Pd.', '199003032015031003', 'Fisika', '081211110003'],
+            'dewi' => ['dewi@presensi.test', 'Dewi Lestari, S.Pd.', '199204042018042004', 'Bahasa Inggris', '081211110004'],
         ];
 
-        $guru = [];
+        $hasil = [];
+        foreach ($dataGuru as $key => [$email, $nama, $nip, $mapel, $telepon]) {
+            $pengguna = $this->pengguna($email, $nama, 'guru', $nip, $telepon, 'aktif');
 
-        foreach ($items as $index => [$nomor, $nama, $email, $mataPelajaran, $jabatan, $kodeJadwal, $aktif]) {
-            $pengguna = $this->pengguna(
-                $email,
-                $nama,
-                'guru',
-                $nomor,
-                '08123'.str_pad((string) ($index + 1), 7, '0', STR_PAD_LEFT),
-                $aktif ? 'aktif' : 'nonaktif',
-            );
-
-            $guru[] = Guru::query()->updateOrCreate(
+            $guru = Guru::query()->updateOrCreate(
                 ['id_pengguna' => $pengguna->id],
                 [
-                    'id_jadwal_kerja_bawaan' => $jadwalKerja[$kodeJadwal]->id,
-                    'nip' => $nomor,
-                    'mata_pelajaran' => $mataPelajaran,
-                    'jabatan' => $jabatan,
-                    'alamat' => 'Jl. Pendidikan No. '.($index + 10).', Jakarta',
-                    'jadwal_kerja' => $kodeJadwal === 'siang'
-                        ? 'Senin-Jumat, jadwal siang dan kegiatan tambahan'
-                        : 'Senin-Jumat, jadwal reguler sekolah',
-                    'notifikasi_aktif' => $index % 3 !== 0,
-                    'aktif' => $aktif,
+                    'nip' => $nip,
+                    'mata_pelajaran' => $mapel,
+                    'jabatan' => 'Guru Mata Pelajaran',
+                    'alamat' => 'Jl. Pendidikan No. 10, Jakarta',
+                    'aktif' => true,
                 ],
-            )->fresh(['pengguna', 'jadwalKerjaBawaan']);
+            );
+
+            $hasil[$key] = $guru->fresh('pengguna');
         }
 
-        return $guru;
+        return $hasil;
     }
 
     /**
-     * @param  array<int, Guru>  $guru
+     * @return array<string, Kelas>
      */
-    public function seedPerangkat(array $guru): void
+    public function seedKelas(): array
     {
-        foreach ($guru as $index => $guruItem) {
-            if (! $guruItem->aktif || $index > 7) {
-                continue;
-            }
+        $items = [
+            'X-MIPA-1' => ['X-MIPA-1', 10, 'IPA', '2026/2027'],
+            'X-MIPA-2' => ['X-MIPA-2', 10, 'IPA', '2026/2027'],
+            'XI-MIPA-1' => ['XI-MIPA-1', 11, 'IPA', '2026/2027'],
+        ];
 
-            if ($guruItem->pengguna->email === 'guru@presensi.test') {
-                $guruItem->pengguna->perangkat()->update(['aktif' => false]);
-
-                continue;
-            }
-
-            $guruItem->pengguna->perangkat()->updateOrCreate(
-                ['id_perangkat' => 'demo-device-'.$guruItem->nip],
+        $hasil = [];
+        foreach ($items as $key => [$nama, $tingkat, $jurusan, $tahun]) {
+            $hasil[$key] = Kelas::query()->updateOrCreate(
+                ['nama_kelas' => $nama],
                 [
-                    'nama_perangkat' => 'Android Demo '.($index + 1),
-                    'platform' => 'android',
-                    'pertama_terlihat_pada' => now()->subDays(14 - $index),
-                    'terakhir_terlihat_pada' => now()->subHours($index + 1),
+                    'tingkat' => $tingkat,
+                    'jurusan' => $jurusan,
+                    'tahun_ajaran' => $tahun,
                     'aktif' => true,
                 ],
             );
         }
+
+        return $hasil;
+    }
+
+    /**
+     * @return array<string, MataPelajaran>
+     */
+    public function seedMataPelajaran(): array
+    {
+        $items = [
+            'MAT' => ['MAT', 'Matematika', 'Matematika Wajib Kurikulum Merdeka'],
+            'IND' => ['IND', 'Bahasa Indonesia', 'Bahasa dan Sastra Indonesia'],
+            'ING' => ['ING', 'Bahasa Inggris', 'English for Communication'],
+            'IPA' => ['IPA', 'Fisika', 'Fisika Dasar dan Penerapan'],
+            'TIK' => ['TIK', 'Informatika & Pemrograman', 'Pengenalan Komputasi dan Algoritma'],
+        ];
+
+        $hasil = [];
+        foreach ($items as $key => [$kode, $nama, $deskripsi]) {
+            $hasil[$key] = MataPelajaran::query()->updateOrCreate(
+                ['kode_mapel' => $kode],
+                [
+                    'nama_mapel' => $nama,
+                    'deskripsi' => $deskripsi,
+                    'aktif' => true,
+                ],
+            );
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * @param  array<string, Kelas>  $daftarKelas
+     * @return array<string, Murid>
+     */
+    public function seedMurid(array $daftarKelas): array
+    {
+        $items = [
+            'murid' => ['murid@presensi.test', 'Ahmad Fauzi', '20261001', '0012345671', 'L', 'X-MIPA-1', 'demo-device-20261001'],
+            'bima' => ['bima@presensi.test', 'Bima Pratama', '20261002', '0012345672', 'L', 'X-MIPA-1', 'demo-device-20261002'],
+            'citra' => ['citra@presensi.test', 'Citra Kirana', '20261003', '0012345673', 'P', 'X-MIPA-1', 'demo-device-20261003'],
+            'dian' => ['dian@presensi.test', 'Dian Sastro', '20261004', '0012345674', 'P', 'X-MIPA-1', 'demo-device-20261004'],
+            'eko' => ['eko@presensi.test', 'Eko Kurniawan', '20261005', '0012345675', 'L', 'X-MIPA-1', 'demo-device-20261005'],
+            'fitri' => ['fitri@presensi.test', 'Fitri Handayani', '20261006', '0012345676', 'P', 'X-MIPA-1', 'demo-device-20261006'],
+            'gilang' => ['gilang@presensi.test', 'Gilang Ramadhan', '20261007', '0012345677', 'L', 'X-MIPA-2', 'demo-device-20261007'],
+            'hana' => ['hana@presensi.test', 'Hana Wijaya', '20261008', '0012345678', 'P', 'X-MIPA-2', 'demo-device-20261008'],
+            'indra' => ['indra@presensi.test', 'Indra Lesmana', '20261009', '0012345679', 'L', 'X-MIPA-2', 'demo-device-20261009'],
+            'joko' => ['joko@presensi.test', 'Joko Widodo', '20251001', '0012345680', 'L', 'XI-MIPA-1', 'demo-device-20251001'],
+            'kartika' => ['kartika@presensi.test', 'Kartika Putri', '20251002', '0012345681', 'P', 'XI-MIPA-1', 'demo-device-20251002'],
+            'lukman' => ['lukman@presensi.test', 'Lukman Sardi', '20251003', '0012345682', 'L', 'XI-MIPA-1', 'demo-device-20251003'],
+        ];
+
+        $hasil = [];
+        foreach ($items as $key => [$email, $nama, $nis, $nisn, $jk, $kelasKode, $deviceId]) {
+            $pengguna = $this->pengguna($email, $nama, 'murid', $nis, '0813'.str_pad($nis, 8, '0', STR_PAD_LEFT), 'aktif');
+            $kelas = $daftarKelas[$kelasKode] ?? null;
+
+            $murid = Murid::query()->updateOrCreate(
+                ['id_pengguna' => $pengguna->id],
+                [
+                    'id_kelas' => $kelas?->id,
+                    'nis' => $nis,
+                    'nisn' => $nisn,
+                    'jenis_kelamin' => $jk,
+                    'telepon_wali' => '08128888'.substr($nis, -4),
+                    'alamat' => 'Jl. Siswa No. '.substr($nis, -2).', Jakarta',
+                    'aktif' => true,
+                ],
+            );
+
+            // Bind device ID untuk murid
+            $pengguna->perangkat()->updateOrCreate(
+                ['id_perangkat' => $deviceId],
+                [
+                    'nama_perangkat' => 'Android '.$nama,
+                    'platform' => 'android',
+                    'pertama_terlihat_pada' => now()->subDays(10),
+                    'terakhir_terlihat_pada' => now(),
+                    'aktif' => true,
+                ],
+            );
+
+            $hasil[$key] = $murid->fresh(['pengguna', 'kelas']);
+        }
+
+        return $hasil;
     }
 }

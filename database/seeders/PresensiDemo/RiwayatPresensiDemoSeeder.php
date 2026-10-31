@@ -2,103 +2,113 @@
 
 namespace Database\Seeders\PresensiDemo;
 
-use App\Models\Guru;
-use App\Models\HariLibur;
+use App\Models\JadwalPelajaran;
 use App\Models\LokasiSekolah;
+use App\Models\Murid;
 use App\Models\Pengguna;
+use App\Models\Presensi;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonPeriod;
-use Database\Seeders\PresensiDemo\Concerns\MembuatDataDemo;
 use Illuminate\Database\Seeder;
 
 class RiwayatPresensiDemoSeeder extends Seeder
 {
-    use MembuatDataDemo;
-
     /**
-     * @param  array<int, Guru>  $guru
+     * @param  array<string, Murid>  $daftarMurid
+     * @param  array<string, JadwalPelajaran>  $daftarJadwal
      */
-    public function seed(array $guru, Pengguna $admin, LokasiSekolah $lokasi): void
+    public function seed(array $daftarMurid, array $daftarJadwal, Pengguna $admin, LokasiSekolah $lokasi): void
     {
-        $guruAktif = collect($guru)->filter(fn (Guru $guruItem) => $guruItem->aktif)->values();
-        $periode = CarbonPeriod::create(CarbonImmutable::now()->startOfMonth(), CarbonImmutable::now());
-        $hariLibur = HariLibur::query()
-            ->pluck('tanggal')
-            ->map(fn ($tanggal) => CarbonImmutable::parse($tanggal)->toDateString())
-            ->all();
+        $muridMipa1 = collect($daftarMurid)->filter(fn (Murid $m) => $m->kelas?->nama_kelas === 'X-MIPA-1')->values();
+        $jadwalUtama = $daftarJadwal['hari_ini_mat'] ?? null;
 
-        foreach ($periode as $tanggal) {
-            $hari = CarbonImmutable::parse($tanggal);
+        if (! $jadwalUtama) {
+            return;
+        }
 
-            if ($hari->isWeekend() || in_array($hari->toDateString(), $hariLibur, true)) {
-                continue;
-            }
+        // 1. Presensi Hari Ini untuk beberapa murid di X-MIPA-1
+        // Murid 1 (Bima): Hadir tepat waktu
+        if ($m1 = $muridMipa1->get(1)) {
+            Presensi::query()->updateOrCreate(
+                [
+                    'id_murid' => $m1->id,
+                    'id_jadwal_pelajaran' => $jadwalUtama->id,
+                    'tanggal_presensi' => today()->toDateString(),
+                ],
+                [
+                    'id_pengguna' => $m1->id_pengguna,
+                    'id_lokasi_sekolah' => $lokasi->id,
+                    'waktu_presensi' => today()->setTime(7, 28),
+                    'status' => 'hadir',
+                    'metode' => 'qr_lokasi',
+                    'latitude' => (float) $lokasi->latitude + 0.0001,
+                    'longitude' => (float) $lokasi->longitude + 0.0001,
+                    'akurasi' => 5,
+                    'jarak_meter' => 15,
+                    'terdeteksi_lokasi_palsu' => false,
+                    'id_perangkat' => 'demo-device-'.$m1->nis,
+                ],
+            );
+        }
 
-            foreach ($guruAktif as $index => $guruItem) {
-                $jadwal = $guruItem->jadwalKerjaBawaan;
-                $pola = ($hari->day + $index) % 19;
+        // Murid 2 (Citra): Terlambat
+        if ($m2 = $muridMipa1->get(2)) {
+            Presensi::query()->updateOrCreate(
+                [
+                    'id_murid' => $m2->id,
+                    'id_jadwal_pelajaran' => $jadwalUtama->id,
+                    'tanggal_presensi' => today()->toDateString(),
+                ],
+                [
+                    'id_pengguna' => $m2->id_pengguna,
+                    'id_lokasi_sekolah' => $lokasi->id,
+                    'waktu_presensi' => today()->setTime(7, 50),
+                    'status' => 'terlambat',
+                    'metode' => 'qr_lokasi',
+                    'latitude' => (float) $lokasi->latitude + 0.0002,
+                    'longitude' => (float) $lokasi->longitude,
+                    'akurasi' => 8,
+                    'jarak_meter' => 22,
+                    'terdeteksi_lokasi_palsu' => false,
+                    'id_perangkat' => 'demo-device-'.$m2->nis,
+                ],
+            );
+        }
 
-                if ($pola === 0) {
-                    $presensi = $this->presensi($guruItem, $lokasi, $hari, [
-                        'status' => 'alpha',
-                        'catatan' => 'Tidak hadir tanpa keterangan pada data demo.',
-                    ]);
-                    $this->audit($presensi, $guruItem->pengguna, null, 'seed_alpha', ['sumber' => 'demo seeder']);
+        // 2. Presensi Historis 7 hari ke belakang untuk semua murid di X-MIPA-1
+        $tanggalMulai = CarbonImmutable::now()->subDays(14);
+        $statusPilihan = ['hadir', 'hadir', 'hadir', 'hadir', 'terlambat', 'hadir'];
 
+        foreach ($muridMipa1 as $index => $murid) {
+            for ($hari = 1; $hari <= 10; $hari++) {
+                $tgl = $tanggalMulai->addDays($hari);
+                if ($tgl->isWeekend() || $tgl->isToday()) {
                     continue;
                 }
 
-                $terlambat = in_array($pola, [5, 11], true);
-                $jamMasuk = $hari
-                    ->setTimeFromTimeString($jadwal->jam_masuk)
-                    ->addMinutes($terlambat ? $jadwal->toleransi_terlambat_menit + 12 + $index : max(0, $index - 2));
-                $jamPulang = $hari
-                    ->setTimeFromTimeString($jadwal->jam_pulang)
-                    ->addMinutes(($index % 4) * 5);
+                $status = $statusPilihan[($index + $hari) % count($statusPilihan)];
+                $jarak = rand(10, 60);
 
-                $presensi = $this->presensi($guruItem, $lokasi, $hari, [
-                    'id_jadwal_kerja' => $jadwal->id,
-                    'jam_masuk_pada' => $jamMasuk,
-                    'jam_pulang_pada' => $jamPulang,
-                    'latitude_masuk' => PresensiDemoConfig::LATITUDE_SEKOLAH + (($index + 1) * 0.0000100),
-                    'longitude_masuk' => PresensiDemoConfig::LONGITUDE_SEKOLAH + (($index + 1) * 0.0000120),
-                    'akurasi_masuk' => 6 + ($index % 8),
-                    'jarak_masuk_meter' => 12 + ($index * 3),
-                    'latitude_pulang' => PresensiDemoConfig::LATITUDE_SEKOLAH + (($index + 2) * 0.0000090),
-                    'longitude_pulang' => PresensiDemoConfig::LONGITUDE_SEKOLAH + (($index + 2) * 0.0000110),
-                    'akurasi_pulang' => 8 + ($index % 6),
-                    'jarak_pulang_meter' => 16 + ($index * 2),
-                    'status' => $terlambat ? 'terlambat' : 'hadir',
-                    'id_perangkat' => 'demo-device-'.$guruItem->nip,
-                ]);
-
-                $this->audit($presensi, $guruItem->pengguna, null, 'seed_presensi_masuk', [
-                    'jarak_meter' => $presensi->jarak_masuk_meter,
-                    'akurasi' => $presensi->akurasi_masuk,
-                ]);
-                $this->audit($presensi, $guruItem->pengguna, null, 'seed_presensi_pulang', [
-                    'jarak_meter' => $presensi->jarak_pulang_meter,
-                    'akurasi' => $presensi->akurasi_pulang,
-                ]);
+                Presensi::query()->updateOrCreate(
+                    [
+                        'id_murid' => $murid->id,
+                        'id_jadwal_pelajaran' => $jadwalUtama->id,
+                        'tanggal_presensi' => $tgl->toDateString(),
+                    ],
+                    [
+                        'id_pengguna' => $murid->id_pengguna,
+                        'id_lokasi_sekolah' => $lokasi->id,
+                        'waktu_presensi' => $tgl->setTime(7, $status === 'hadir' ? rand(20, 35) : rand(48, 55)),
+                        'status' => $status,
+                        'metode' => 'qr_lokasi',
+                        'latitude' => (float) $lokasi->latitude,
+                        'longitude' => (float) $lokasi->longitude,
+                        'akurasi' => 6,
+                        'jarak_meter' => $jarak,
+                        'terdeteksi_lokasi_palsu' => false,
+                        'id_perangkat' => 'demo-device-'.$murid->nis,
+                    ],
+                );
             }
-        }
-
-        $guruManual = $guruAktif->get(2);
-        if ($guruManual) {
-            $tanggalManual = CarbonImmutable::now()->subDays(2);
-            $presensiManual = $this->presensi($guruManual, $lokasi, $tanggalManual, [
-                'id_jadwal_kerja' => $guruManual->id_jadwal_kerja_bawaan,
-                'status' => 'hadir',
-                'jam_masuk_pada' => $tanggalManual->setTime(7, 3),
-                'jam_pulang_pada' => $tanggalManual->setTime(15, 8),
-                'catatan' => 'Koreksi demo karena aplikasi guru sempat tidak bisa membuka GPS.',
-                'id_pengoreksi' => $admin->id,
-                'alasan_koreksi' => 'Simulasi koreksi manual oleh admin.',
-            ]);
-
-            $this->audit($presensiManual, $guruManual->pengguna, $admin, 'seed_koreksi_manual', [
-                'alasan' => $presensiManual->alasan_koreksi,
-            ]);
         }
     }
 }

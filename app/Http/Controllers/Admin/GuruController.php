@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Guru;
 use App\Models\JadwalKerja;
 use App\Models\Pengguna;
-use App\Support\SortirAdmin;
+use App\Support\AdminSortHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +35,7 @@ class GuruController extends Controller
             ->when($request->query('id_jadwal_kerja'), fn ($query, $id) => $query->where('id_jadwal_kerja_bawaan', $id))
             ->when($request->query('mata_pelajaran'), fn ($query, string $mataPelajaran) => $query->where('mata_pelajaran', 'like', '%'.$mataPelajaran.'%'));
 
-        SortirAdmin::terapkan($query, $request, [
+        AdminSortHelper::terapkan($query, $request, [
             'nama' => fn ($query, string $arah) => $query->orderBy(
                 Pengguna::query()->select('nama')->whereColumn('pengguna.id', 'guru.id_pengguna'),
                 $arah

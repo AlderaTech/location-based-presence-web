@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Guru extends Model
 {
     public const CREATED_AT = 'dibuat_pada';
+
     public const UPDATED_AT = 'diubah_pada';
 
     protected $table = 'guru';
@@ -43,13 +45,18 @@ class Guru extends Model
         return $this->belongsTo(JadwalKerja::class, 'id_jadwal_kerja_bawaan');
     }
 
-    public function presensi(): HasMany
+    public function jadwalPelajaran(): HasMany
     {
-        return $this->hasMany(Presensi::class, 'id_guru');
+        return $this->hasMany(JadwalPelajaran::class, 'id_guru');
     }
 
-    public function pengajuanIzin(): HasMany
+    public function sesiPresensi(): HasMany
     {
-        return $this->hasMany(PengajuanIzin::class, 'id_guru');
+        return $this->hasMany(SesiPresensi::class, 'id_guru');
+    }
+
+    public function presensi(): HasManyThrough
+    {
+        return $this->hasManyThrough(Presensi::class, JadwalPelajaran::class, 'id_guru', 'id_jadwal_pelajaran');
     }
 }

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Mobile;
 
 use App\Http\Controllers\Controller;
 use App\Models\HariLibur;
+use App\Models\JadwalPelajaran;
 use App\Models\LokasiSekolah;
-use App\Support\FormatPresensi;
+use App\Models\Presensi;
+use App\Support\PresensiFormatter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -14,39 +16,116 @@ class ProfileController extends Controller
 {
     public function tampil(Request $request): JsonResponse
     {
-        return response()->json(['pengguna' => FormatPresensi::pengguna($request->user()->load('guru.jadwalKerjaBawaan'))]);
+        return response()->json([
+            'pengguna' => PresensiFormatter::pengguna($request->user()->load('murid.kelas')),
+        ]);
     }
 
     public function ubahPengaturanNotifikasi(Request $request): JsonResponse
     {
         $data = $request->validate(['notifikasi_aktif' => ['required', 'boolean']]);
-        $request->user()->guru->update($data);
+        if ($request->user()->murid) {
+            $request->user()->murid->update($data);
+        } elseif ($request->user()->guru) {
+            $request->user()->guru->update($data);
+        }
 
         return $this->tampil($request);
     }
 
-    public function jadwalKerja(Request $request): JsonResponse
+    public function jadwalHariIni(Request $request): JsonResponse
     {
-        $guru = $request->user()->guru()->with('jadwalKerjaBawaan')->first();
-        $jadwalKerja = $guru?->jadwalKerjaBawaan;
-        $lokasi = LokasiSekolah::query()->where('aktif', true)->first();
+        $murid = $request->user()->murid;
+        $hariMap = [
+            0 => 'minggu',
+            1 => 'senin',
+            2 => 'selasa',
+            3 => 'rabu',
+            4 => 'kamis',
+            5 => 'jumat',
+            6 => 'sabtu',
+        ];
+
+        $hariIniIndex = (int) now()->dayOfWeek;
+        $hariIniStr = $hariMap[$hariIniIndex] ?? 'senin';
+
+        $jadwalQuery = JadwalPelajaran::query()
+            ->with(['mataPelajaran', 'guru.pengguna', 'lokasiSekolah', 'kelas'])
+            ->where('aktif', true);
+
+        if ($murid && $murid->id_kelas) {
+            $jadwalQuery->where('id_kelas', $murid->id_kelas);
+        }
+
+        $jadwalList = $jadwalQuery
+            ->where('hari', $hariIniStr)
+            ->orderBy('jam_mulai')
+            ->get();
+
+        $presensiHariIni = [];
+        if ($murid) {
+            $presensiHariIni = Presensi::query()
+                ->where('id_murid', $murid->id)
+                ->whereDate('tanggal_presensi', today())
+                ->get()
+                ->keyBy('id_jadwal_pelajaran');
+        }
+
+        $lokasiDefault = LokasiSekolah::query()->where('aktif', true)->first();
+
+        $dataJadwal = $jadwalList->map(function (JadwalPelajaran $j) use ($presensiHariIni, $lokasiDefault) {
+            $presensi = $presensiHariIni->get($j->id);
+
+            return [
+                'id' => $j->id,
+                'hari' => $j->hari,
+                'jam_mulai' => substr($j->jam_mulai, 0, 5),
+                'jam_selesai' => substr($j->jam_selesai, 0, 5),
+                'toleransi_terlambat_menit' => $j->toleransi_terlambat_menit,
+                'ruangan' => $j->ruangan,
+                'mata_pelajaran' => [
+                    'id' => $j->mataPelajaran?->id,
+                    'kode' => $j->mataPelajaran?->kode_mapel,
+                    'nama' => $j->mataPelajaran?->nama_mapel,
+                ],
+                'kelas' => [
+                    'id' => $j->kelas?->id,
+                    'nama' => $j->kelas?->nama_kelas,
+                ],
+                'guru' => [
+                    'id' => $j->guru?->id,
+                    'nama' => $j->guru?->pengguna?->nama,
+                ],
+                'lokasi_sekolah' => [
+                    'id' => $j->lokasiSekolah?->id ?? $lokasiDefault?->id,
+                    'nama' => $j->lokasiSekolah?->nama ?? $lokasiDefault?->nama,
+                    'latitude' => (float) ($j->lokasiSekolah?->latitude ?? $lokasiDefault?->latitude ?? 0),
+                    'longitude' => (float) ($j->lokasiSekolah?->longitude ?? $lokasiDefault?->longitude ?? 0),
+                    'radius_meter' => (int) ($j->lokasiSekolah?->radius_meter ?? $lokasiDefault?->radius_meter ?? 100),
+                ],
+                'sudah_presensi' => $presensi !== null,
+                'status_presensi' => $presensi?->status,
+                'waktu_presensi' => $presensi?->waktu_presensi?->toIso8601String(),
+            ];
+        });
 
         return response()->json([
-            'jadwal_kerja' => $jadwalKerja ? [
-                'id' => $jadwalKerja->id,
-                'nama' => $jadwalKerja->nama,
-                'jam_masuk' => $jadwalKerja->jam_masuk,
-                'jam_pulang' => $jadwalKerja->jam_pulang,
-                'toleransi_terlambat_menit' => $jadwalKerja->toleransi_terlambat_menit,
+            'hari' => $hariIniStr,
+            'tanggal' => today()->toDateString(),
+            'lokasi_sekolah' => $lokasiDefault ? [
+                'id' => $lokasiDefault->id,
+                'nama' => $lokasiDefault->nama,
+                'latitude' => (float) $lokasiDefault->latitude,
+                'longitude' => (float) $lokasiDefault->longitude,
+                'radius_meter' => $lokasiDefault->radius_meter,
             ] : null,
-            'lokasi_sekolah' => $lokasi ? [
-                'id' => $lokasi->id,
-                'nama' => $lokasi->nama,
-                'latitude' => (float) $lokasi->latitude,
-                'longitude' => (float) $lokasi->longitude,
-                'radius_meter' => $lokasi->radius_meter,
-            ] : null,
+            'jadwal' => $dataJadwal,
         ]);
+    }
+
+    public function jadwalKerja(Request $request): JsonResponse
+    {
+        return $this->jadwalHariIni($request);
     }
 
     public function hariLibur(Request $request): JsonResponse
@@ -59,7 +138,6 @@ class ProfileController extends Controller
             ->map(fn (HariLibur $hariLibur) => [
                 'tanggal' => $hariLibur->tanggal->toDateString(),
                 'nama' => $hariLibur->nama,
-                'jenis' => $hariLibur->jenis,
             ]);
 
         return response()->json(['data' => $items]);

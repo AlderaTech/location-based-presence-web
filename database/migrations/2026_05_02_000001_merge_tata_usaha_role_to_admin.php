@@ -8,8 +8,12 @@ return new class extends Migration
     public function up(): void
     {
         DB::table('pengguna')
-            ->where('peran', 'tata_usaha')
+            ->whereIn('peran', ['tata_usaha', 'kepala_sekolah'])
             ->update(['peran' => 'admin']);
+
+        DB::table('pengguna')
+            ->whereIn('peran', ['siswa', 'mahasiswa'])
+            ->update(['peran' => 'murid']);
     }
 
     public function down(): void

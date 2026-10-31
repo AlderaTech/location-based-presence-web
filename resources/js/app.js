@@ -15,29 +15,44 @@ import {
 } from 'chart.js';
 import {
     ArrowDown,
+    ArrowLeft,
     ArrowUp,
     ArrowUpDown,
+    BookOpen,
     CalendarClock,
     CalendarDays,
     CalendarRange,
+    CalendarX2,
     ChartColumnBig,
     Check,
+    CheckCircle,
     Circle,
+    CircleCheck,
     CircleCheckBig,
     CircleX,
     ClipboardCheck,
     Clock3,
     createIcons,
+    ExternalLink,
+    FileCheck,
     FileCheck2,
+    FileSpreadsheet,
     FileText,
     Filter,
+    GraduationCap,
     Inbox,
     LayoutDashboard,
+    Lock,
     LogOut,
     MapPin,
+    Maximize,
     Paperclip,
+    Plus,
+    QrCode,
+    School,
     Search,
     ShieldCheck,
+    Smartphone,
     Stethoscope,
     TriangleAlert,
     UsersRound,
@@ -45,6 +60,8 @@ import {
 } from 'lucide';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 Chart.register(
     ArcElement,
@@ -63,28 +80,43 @@ Chart.register(
 
 const lucideIcons = {
     ArrowDown,
+    ArrowLeft,
     ArrowUp,
     ArrowUpDown,
+    BookOpen,
     CalendarClock,
     CalendarDays,
     CalendarRange,
+    CalendarX2,
     ChartColumnBig,
     Check,
+    CheckCircle,
     Circle,
+    CircleCheck,
     CircleCheckBig,
     CircleX,
     ClipboardCheck,
     Clock3,
+    ExternalLink,
+    FileCheck,
     FileCheck2,
+    FileSpreadsheet,
     FileText,
     Filter,
+    GraduationCap,
     Inbox,
     LayoutDashboard,
+    Lock,
     LogOut,
     MapPin,
+    Maximize,
     Paperclip,
+    Plus,
+    QrCode,
+    School,
     Search,
     ShieldCheck,
+    Smartphone,
     Stethoscope,
     TriangleAlert,
     UsersRound,
@@ -326,7 +358,7 @@ document.addEventListener('submit', (event) => {
     });
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+window.refreshIcons = () => {
     createIcons({
         icons: lucideIcons,
         attrs: {
@@ -335,5 +367,53 @@ document.addEventListener('DOMContentLoaded', () => {
             'stroke-width': 1.8,
         },
     });
+};
+
+export const initTimepickers = (container = document) => {
+    const elements = container.querySelectorAll('.timepicker-24');
+    elements.forEach((el) => {
+        if (el._flatpickr) {
+            return;
+        }
+
+        const isInsideDialog = Boolean(el.closest('dialog'));
+
+        flatpickr(el, {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            allowInput: true,
+            minuteIncrement: 5,
+            disableMobile: true,
+            static: isInsideDialog,
+            onClose: (selectedDates, dateStr, instance) => {
+                const raw = instance.input.value.trim();
+                if (!raw) return;
+
+                const clean = raw.replace(/[^\d:]/g, ':');
+                const parts = clean.split(':').filter(Boolean);
+                if (parts.length === 1 && parts[0].length <= 2) {
+                    const h = String(parseInt(parts[0], 10)).padStart(2, '0');
+                    if (parseInt(h, 10) < 24) {
+                        instance.setDate(`${h}:00`, true);
+                    }
+                } else if (parts.length >= 2) {
+                    const h = String(parseInt(parts[0], 10)).padStart(2, '0');
+                    const m = String(parseInt(parts[1], 10)).padStart(2, '0');
+                    if (parseInt(h, 10) < 24 && parseInt(m, 10) < 60) {
+                        instance.setDate(`${h}:${m}`, true);
+                    }
+                }
+            },
+        });
+    });
+};
+
+window.initTimepickers = initTimepickers;
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.refreshIcons();
     initDashboardCharts();
+    initTimepickers();
 });
